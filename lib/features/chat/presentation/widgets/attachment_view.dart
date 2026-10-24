@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
-import '../../../l10n/app_localizations.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/models.dart';
 
 final Map<String, MemoryImage> _imageCache = <String, MemoryImage>{};

@@ -129,14 +129,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       _snack(l10n.attachmentTooBig);
       return;
     }
-    Uint8List? bytes;
+    final Uint8List fileBytes;
     try {
-      bytes = await file.readAsBytes();
+      fileBytes = await file.readAsBytes();
     } catch (e) {
       if (mounted) _snack(l10n.errUnknown('$e'));
       return;
     }
-    if (!mounted || bytes == null) return;
+    if (!mounted) return;
     final mime = _mimeForExtension((file.extension ?? '').toLowerCase());
     if (mime == null) return;
     final kind = mime.split('/').first;
@@ -155,7 +155,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ChatAttachment.fromBytes(
           mimeType: mime,
           name: file.name,
-          bytes: bytes,
+          bytes: fileBytes,
         ),
       );
     });
