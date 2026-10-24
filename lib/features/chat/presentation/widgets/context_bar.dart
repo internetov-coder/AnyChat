@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../settings/app_settings.dart';
 import '../../../../core/storage/token_estimator.dart';
-import '../../../../core/storage/db.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../domain/models.dart';
 
 /// Shared context statistics for the strip and the detail circle.
 ///

@@ -89,35 +89,31 @@ class InputBar extends StatelessWidget {
               Positioned(
                 right: 6,
                 bottom: 4,
-                child: isBusy
-                    ? IconButton(
-                        onPressed: onStop,
-                        tooltip: l10n.stop,
-                        icon: const Icon(Icons.stop),
-                        style: IconButton.styleFrom(
-                          backgroundColor: scheme.error,
-                          foregroundColor: scheme.onError,
+                child: SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: isBusy
+                      ? IconButton(
+                          onPressed: onStop,
+                          tooltip: l10n.stop,
+                          icon: const Icon(Icons.stop),
                           padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints.tightFor(
-                            width: 40,
-                            height: 40,
+                          style: IconButton.styleFrom(
+                            backgroundColor: scheme.error,
+                            foregroundColor: scheme.onError,
+                          ),
+                        )
+                      : IconButton(
+                          onPressed: onSend,
+                          tooltip: l10n.send,
+                          icon: const Icon(Icons.arrow_upward),
+                          padding: EdgeInsets.zero,
+                          style: IconButton.styleFrom(
+                            backgroundColor: scheme.primary,
+                            foregroundColor: scheme.onPrimary,
                           ),
                         ),
-                      )
-                    : IconButton(
-                        onPressed: onSend,
-                        tooltip: l10n.send,
-                        icon: const Icon(Icons.arrow_upward),
-                        style: IconButton.styleFrom(
-                          backgroundColor: scheme.primary,
-                          foregroundColor: scheme.onPrimary,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints.tightFor(
-                            width: 40,
-                            height: 40,
-                          ),
-                        ),
-                      ),
+                ),
               ),
             ],
           ),
