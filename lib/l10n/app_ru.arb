@@ -1,0 +1,145 @@
+{
+  "@@locale": "ru",
+  "appTitle": "AnyChat",
+  "navChats": "Чаты",
+  "navModels": "Модели",
+  "navSettings": "Настройки",
+
+  "chatsEmpty": "Чатов пока нет. Создайте новый, чтобы начать.",
+  "newChat": "Новый чат",
+  "deleteChat": "Удалить чат",
+  "renameChat": "Переименовать",
+  "chatNameLabel": "Название чата",
+
+  "messageInputHint": "Сообщение…",
+  "send": "Отправить",
+  "stop": "Стоп",
+  "regenerate": "Перегенерировать",
+  "retry": "Повторить",
+  "editMessage": "Изменить",
+  "cancel": "Отмена",
+  "save": "Сохранить",
+  "delete": "Удалить",
+  "apply": "Применить",
+  "loading": "Загрузка…",
+  "generating": "Генерация…",
+  "emptyChatHint": "Отправьте первое сообщение, чтобы начать диалог.",
+
+  "branchFromHere": "Ветка с этого сообщения",
+  "branches": "Ветки",
+  "newBranch": "Новая ветка",
+  "branchMain": "main",
+  "editMessageTitle": "Изменить сообщение",
+  "editMessageHint": "Правка создаёт новую ветку, исходная остаётся.",
+
+  "contextUsage": "{tokens} / {limit} токенов",
+  "@contextUsage": {
+    "placeholders": {
+      "tokens": { "type": "num" },
+      "limit": { "type": "num" }
+    }
+  },
+  "approximateLabel": "приблизительно",
+
+  "handoff": "Сжать историю",
+  "handoffPrompt": "Сделай краткое резюме диалога: цели, решения, ограничения, следующие шаги.",
+  "handoffDone": "Создан новый чат с резюме.",
+
+  "modelsTitle": "Модели",
+  "searchModels": "Поиск моделей",
+  "selectModel": "Выбрать",
+  "currentModel": "Текущая модель",
+  "modelSelected": "Модель выбрана",
+  "customModelLabel": "Своя модель (ID)",
+  "customModelApply": "Использовать",
+  "modelsFallbackNote": "Список провайдера недоступен — показан статический список.",
+  "modelsNoKey": "API-ключ ещё не введён — показан статический список.",
+  "modelsEmpty": "Модели не найдены.",
+  "priceInput": "вход {price} $ / 1M",
+  "@priceInput": {
+    "placeholders": {
+      "price": { "type": "String" }
+    }
+  },
+  "priceOutput": "выход {price} $ / 1M",
+  "@priceOutput": {
+    "placeholders": {
+      "price": { "type": "String" }
+    }
+  },
+  "contextWindowLabel": "контекст {tokens} токенов",
+  "@contextWindowLabel": {
+    "placeholders": {
+      "tokens": { "type": "num" }
+    }
+  },
+
+  "providersTitle": "Провайдер",
+  "selectProvider": "Выбрать провайдера",
+  "providerSelected": "Провайдер выбран",
+  "formatLabel": "Формат",
+  "apiKeyLabel": "API-ключ",
+  "saveKey": "Сохранить ключ",
+  "deleteKey": "Удалить ключ",
+  "editKey": "Сменить ключ",
+  "keySavedMasked": "Ключ сохранён: {mask}",
+  "@keySavedMasked": {
+    "placeholders": {
+      "mask": { "type": "String" }
+    }
+  },
+  "keyRemoved": "Ключ удалён",
+  "noKeyYet": "Ключ не сохранён",
+  "checkKey": "Проверить ключ",
+  "keyOk": "✅ Ключ работает",
+  "keyFailed": "❌ Ключ не работает",
+  "baseUrlOverride": "Base URL (переопределение)",
+  "baseUrlHint": "Оставьте пустым, чтобы использовать адрес по умолчанию.",
+  "baseUrlReset": "Сбросить",
+  "keyMissing": "Сначала сохраните API-ключ провайдера.",
+
+  "settingsTitle": "Настройки",
+  "providerSection": "Провайдер и ключ",
+  "generateSection": "Генерация",
+  "themeMode": "Тема",
+  "themeSystem": "Системная",
+  "themeLight": "Светлая",
+  "themeDark": "Тёмная",
+  "language": "Язык",
+  "langAuto": "Авто (система)",
+  "timeoutLabel": "Таймаут запроса (сек)",
+  "systemPromptLabel": "Системный промпт",
+  "systemPromptHint": "Глобальный для всех чатов. Переопределение для чата — в меню чата.",
+  "chatSystemPromptLabel": "Системный промпт для этого чата",
+  "debugLog": "Отладочный лог ошибок",
+  "debugLogEmpty": "Пока ничего не записано.",
+  "openDebugLog": "Показать лог",
+  "clearLog": "Очистить",
+
+  "errAuth": "Неверный или просроченный API-ключ. Проверьте ключ в настройках провайдера.",
+  "errRateLimit": "Слишком много запросов. Подождите {retryAfter} секунд или смените модель/провайдера.",
+  "@errRateLimit": {
+    "placeholders": {
+      "retryAfter": { "type": "num" }
+    }
+  },
+  "errQuota": "Закончилась квота на этом ключе. Пополните баланс у провайдера.",
+  "errModelNotFound": "Модель недоступна. Выберите другую в списке.",
+  "errContextLength": "Сообщение превышает контекст модели. Сожмите историю или выберите модель с большим контекстом.",
+  "errInvalidRequest": "Провайдер отклонил запрос: {details}",
+  "@errInvalidRequest": {
+    "placeholders": {
+      "details": { "type": "String" }
+    }
+  },
+  "errNetwork": "Нет соединения с провайдером. Проверьте интернет.",
+  "errTimeout": "Провайдер не ответил вовремя. Попробуйте ещё раз.",
+  "errServer": "У провайдера проблемы. Попробуйте позже или смените провайдера.",
+  "errUnknown": "Неизвестная ошибка: {raw}. Попробуйте ещё раз.",
+  "@errUnknown": {
+    "placeholders": {
+      "raw": { "type": "String" }
+    }
+  },
+  "errNoModel": "Сначала выберите модель."
+}

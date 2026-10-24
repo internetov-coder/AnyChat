@@ -1,0 +1,145 @@
+{
+  "@@locale": "en",
+  "appTitle": "AnyChat",
+  "navChats": "Chats",
+  "navModels": "Models",
+  "navSettings": "Settings",
+
+  "chatsEmpty": "No chats yet. Create one to get started.",
+  "newChat": "New chat",
+  "deleteChat": "Delete chat",
+  "renameChat": "Rename",
+  "chatNameLabel": "Chat name",
+
+  "messageInputHint": "Message…",
+  "send": "Send",
+  "stop": "Stop",
+  "regenerate": "Regenerate",
+  "retry": "Retry",
+  "editMessage": "Edit",
+  "cancel": "Cancel",
+  "save": "Save",
+  "delete": "Delete",
+  "apply": "Apply",
+  "loading": "Loading…",
+  "generating": "Generating…",
+  "emptyChatHint": "Send your first message to start the conversation.",
+
+  "branchFromHere": "Branch from here",
+  "branches": "Branches",
+  "newBranch": "New branch",
+  "branchMain": "main",
+  "editMessageTitle": "Edit message",
+  "editMessageHint": "Editing creates a new branch; the original stays intact.",
+
+  "contextUsage": "{tokens} / {limit} tokens",
+  "@contextUsage": {
+    "placeholders": {
+      "tokens": { "type": "num" },
+      "limit": { "type": "num" }
+    }
+  },
+  "approximateLabel": "approx.",
+
+  "handoff": "Summarize history",
+  "handoffPrompt": "Write a brief summary of this conversation: goals, decisions, constraints, next steps.",
+  "handoffDone": "A new chat with the summary was created.",
+
+  "modelsTitle": "Models",
+  "searchModels": "Search models",
+  "selectModel": "Select",
+  "currentModel": "Current model",
+  "modelSelected": "Model selected",
+  "customModelLabel": "Custom model ID",
+  "customModelApply": "Use",
+  "modelsFallbackNote": "Provider list unavailable — showing a static list.",
+  "modelsNoKey": "No API key yet — showing a static list.",
+  "modelsEmpty": "No models found.",
+  "priceInput": "in {price} USD / 1M",
+  "@priceInput": {
+    "placeholders": {
+      "price": { "type": "String" }
+    }
+  },
+  "priceOutput": "out {price} USD / 1M",
+  "@priceOutput": {
+    "placeholders": {
+      "price": { "type": "String" }
+    }
+  },
+  "contextWindowLabel": "context {tokens} tokens",
+  "@contextWindowLabel": {
+    "placeholders": {
+      "tokens": { "type": "num" }
+    }
+  },
+
+  "providersTitle": "Provider",
+  "selectProvider": "Select provider",
+  "providerSelected": "Provider selected",
+  "formatLabel": "Format",
+  "apiKeyLabel": "API key",
+  "saveKey": "Save key",
+  "deleteKey": "Delete key",
+  "editKey": "Change key",
+  "keySavedMasked": "Key saved: {mask}",
+  "@keySavedMasked": {
+    "placeholders": {
+      "mask": { "type": "String" }
+    }
+  },
+  "keyRemoved": "Key removed",
+  "noKeyYet": "No key saved",
+  "checkKey": "Check key",
+  "keyOk": "✅ Key works",
+  "keyFailed": "❌ Key doesn't work",
+  "baseUrlOverride": "Base URL override",
+  "baseUrlHint": "Leave empty for the default URL.",
+  "baseUrlReset": "Reset",
+  "keyMissing": "Save the provider API key first.",
+
+  "settingsTitle": "Settings",
+  "providerSection": "Provider & key",
+  "generateSection": "Generation",
+  "themeMode": "Theme",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "language": "Language",
+  "langAuto": "Auto (system)",
+  "timeoutLabel": "Request timeout (sec)",
+  "systemPromptLabel": "System prompt",
+  "systemPromptHint": "Global for all chats. Per-chat override lives in the chat menu.",
+  "chatSystemPromptLabel": "System prompt for this chat",
+  "debugLog": "Error debug log",
+  "debugLogEmpty": "Nothing logged yet.",
+  "openDebugLog": "Show log",
+  "clearLog": "Clear",
+
+  "errAuth": "Invalid or expired API key. Check the key in the provider settings.",
+  "errRateLimit": "Too many requests. Wait {retryAfter} seconds or switch model/provider.",
+  "@errRateLimit": {
+    "placeholders": {
+      "retryAfter": { "type": "num" }
+    }
+  },
+  "errQuota": "Quota on this key is exhausted. Top up your balance with the provider.",
+  "errModelNotFound": "Model unavailable. Pick another one from the list.",
+  "errContextLength": "The message exceeds the model context. Summarize the history or pick a model with a bigger context.",
+  "errInvalidRequest": "The provider rejected the request: {details}",
+  "@errInvalidRequest": {
+    "placeholders": {
+      "details": { "type": "String" }
+    }
+  },
+  "errNetwork": "No connection to the provider. Check your internet.",
+  "errTimeout": "The provider didn't respond in time. Try again.",
+  "errServer": "The provider is having problems. Try later or switch providers.",
+  "errUnknown": "Unknown error: {raw}. Try again.",
+  "@errUnknown": {
+    "placeholders": {
+      "raw": { "type": "String" }
+    }
+  },
+  "errNoModel": "Select a model first."
+}

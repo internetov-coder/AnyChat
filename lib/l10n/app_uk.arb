@@ -1,0 +1,145 @@
+{
+  "@@locale": "uk",
+  "appTitle": "AnyChat",
+  "navChats": "Чати",
+  "navModels": "Моделі",
+  "navSettings": "Налаштування",
+
+  "chatsEmpty": "Чатів поки немає. Створіть новий, щоб почати.",
+  "newChat": "Новий чат",
+  "deleteChat": "Видалити чат",
+  "renameChat": "Перейменувати",
+  "chatNameLabel": "Назва чата",
+
+  "messageInputHint": "Повідомлення…",
+  "send": "Надіслати",
+  "stop": "Стоп",
+  "regenerate": "Перегенерувати",
+  "retry": "Повторити",
+  "editMessage": "Змінити",
+  "cancel": "Скасувати",
+  "save": "Зберегти",
+  "delete": "Видалити",
+  "apply": "Застосувати",
+  "loading": "Завантаження…",
+  "generating": "Генерація…",
+  "emptyChatHint": "Надішліть перше повідомлення, щоб почати діалог.",
+
+  "branchFromHere": "Гілка з цього повідомлення",
+  "branches": "Гілки",
+  "newBranch": "Нова гілка",
+  "branchMain": "main",
+  "editMessageTitle": "Змінити повідомлення",
+  "editMessageHint": "Редагування створює нову гілку, оригінал зберігається.",
+
+  "contextUsage": "{tokens} / {limit} токенів",
+  "@contextUsage": {
+    "placeholders": {
+      "tokens": { "type": "num" },
+      "limit": { "type": "num" }
+    }
+  },
+  "approximateLabel": "приблизно",
+
+  "handoff": "Стиснути історію",
+  "handoffPrompt": "Зроби коротке резюме діалогу: цілі, рішення, обмеження, наступні кроки.",
+  "handoffDone": "Створено новий чат із резюме.",
+
+  "modelsTitle": "Моделі",
+  "searchModels": "Пошук моделей",
+  "selectModel": "Обрати",
+  "currentModel": "Поточна модель",
+  "modelSelected": "Модель обрано",
+  "customModelLabel": "Своя модель (ID)",
+  "customModelApply": "Використати",
+  "modelsFallbackNote": "Список провайдера недоступний — показано статичний список.",
+  "modelsNoKey": "API-ключ ще не введено — показано статичний список.",
+  "modelsEmpty": "Моделі не знайдено.",
+  "priceInput": "вхід {price} $ / 1M",
+  "@priceInput": {
+    "placeholders": {
+      "price": { "type": "String" }
+    }
+  },
+  "priceOutput": "вихід {price} $ / 1M",
+  "@priceOutput": {
+    "placeholders": {
+      "price": { "type": "String" }
+    }
+  },
+  "contextWindowLabel": "контекст {tokens} токенів",
+  "@contextWindowLabel": {
+    "placeholders": {
+      "tokens": { "type": "num" }
+    }
+  },
+
+  "providersTitle": "Провайдер",
+  "selectProvider": "Обрати провайдера",
+  "providerSelected": "Провайдер обрано",
+  "formatLabel": "Формат",
+  "apiKeyLabel": "API-ключ",
+  "saveKey": "Зберегти ключ",
+  "deleteKey": "Видалити ключ",
+  "editKey": "Змінити ключ",
+  "keySavedMasked": "Ключ збережено: {mask}",
+  "@keySavedMasked": {
+    "placeholders": {
+      "mask": { "type": "String" }
+    }
+  },
+  "keyRemoved": "Ключ видалено",
+  "noKeyYet": "Ключ не збережено",
+  "checkKey": "Перевірити ключ",
+  "keyOk": "✅ Ключ працює",
+  "keyFailed": "❌ Ключ не працює",
+  "baseUrlOverride": "Base URL (перевизначення)",
+  "baseUrlHint": "Залиште порожнім, щоб використовувати адресу за замовчуванням.",
+  "baseUrlReset": "Скинути",
+  "keyMissing": "Спочатку збережіть API-ключ провайдера.",
+
+  "settingsTitle": "Налаштування",
+  "providerSection": "Провайдер і ключ",
+  "generateSection": "Генерація",
+  "themeMode": "Тема",
+  "themeSystem": "Системна",
+  "themeLight": "Світла",
+  "themeDark": "Темна",
+  "language": "Мова",
+  "langAuto": "Авто (система)",
+  "timeoutLabel": "Таймаут запиту (сек)",
+  "systemPromptLabel": "Системний промпт",
+  "systemPromptHint": "Глобальний для всіх чатів. Перевизначення для чата — у меню чата.",
+  "chatSystemPromptLabel": "Системний промпт для цього чата",
+  "debugLog": "Відлагоджувальний лог помилок",
+  "debugLogEmpty": "Поки нічого не записано.",
+  "openDebugLog": "Показати лог",
+  "clearLog": "Очистити",
+
+  "errAuth": "Невірний або протермінований API-ключ. Перевірте ключ у налаштуваннях провайдера.",
+  "errRateLimit": "Забагато запитів. Зачекайте {retryAfter} секунд або змініть модель/провайдера.",
+  "@errRateLimit": {
+    "placeholders": {
+      "retryAfter": { "type": "num" }
+    }
+  },
+  "errQuota": "Закінчилась квота на цьому ключі. Поповніть баланс у провайдера.",
+  "errModelNotFound": "Модель недоступна. Оберіть іншу зі списку.",
+  "errContextLength": "Повідомлення перевищує контекст моделі. Стисніть історію або оберіть модель із більшим контекстом.",
+  "errInvalidRequest": "Провайдер відхилив запит: {details}",
+  "@errInvalidRequest": {
+    "placeholders": {
+      "details": { "type": "String" }
+    }
+  },
+  "errNetwork": "Немає з'єднання з провайдером. Перевірте інтернет.",
+  "errTimeout": "Провайдер не відповів вчасно. Спробуйте ще раз.",
+  "errServer": "У провайдера проблеми. Спробуйте пізніше або змініть провайдера.",
+  "errUnknown": "Невідома помилка: {raw}. Спробуйте ще раз.",
+  "@errUnknown": {
+    "placeholders": {
+      "raw": { "type": "String" }
+    }
+  },
+  "errNoModel": "Спочатку оберіть модель."
+}
