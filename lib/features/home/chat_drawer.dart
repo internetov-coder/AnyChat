@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app_providers.dart';
 import '../../l10n/app_localizations.dart';
-import '../../settings/presentation/settings_screen.dart';
-import '../domain/models.dart';
-import '../state/chat_providers.dart';
-import '../state/current_chat.dart';
+import '../settings/presentation/settings_screen.dart';
+import '../chat/domain/models.dart';
+import '../chat/state/chat_providers.dart';
+import '../chat/state/current_chat.dart';
 
 /// Left drawer (ChatGPT style): recent chats on top, settings at the bottom.
 class ChatDrawer extends ConsumerWidget {

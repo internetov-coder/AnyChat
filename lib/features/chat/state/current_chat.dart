@@ -1,6 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../app_providers.dart';
+import '../../../app_providers.dart';
 
 part 'current_chat.g.dart';
 
