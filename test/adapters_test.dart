@@ -167,6 +167,24 @@ void main() {
       );
     });
 
+    test('serializes top_p and frequency_penalty for openai', () {
+      final request = adapter.buildChatRequest(
+        ChatParams(
+          apiKey: 'k',
+          baseUrl: 'https://api.openai.com/v1',
+          model: 'gpt-4o-mini',
+          turns: const <ChatTurn>[
+            ChatTurn(role: 'user', content: 'hi'),
+          ],
+          topP: 0.9,
+          frequencyPenalty: 0.5,
+        ),
+      );
+      expect(request.body['top_p'], 0.9);
+      expect(request.body['frequency_penalty'], 0.5);
+      expect(request.body.containsKey('top_k'), isFalse);
+    });
+
     test('parses Vercel AI Gateway style pricing and context window', () {
       final models = adapter.parseModels(
         '{"data":[{"id":"google/gemini-2.5-flash","name":"Gemini 2.5 Flash",'
@@ -246,6 +264,24 @@ void main() {
       expect(models.single.modalities, contains(ModelModality.image));
     });
 
+    test('serializes top_p and clamps temperature to 0..1 for anthropic', () {
+      final request = adapter.buildChatRequest(
+        ChatParams(
+          apiKey: 'k',
+          baseUrl: 'https://api.anthropic.com/v1',
+          model: 'claude-3-7-sonnet',
+          turns: const <ChatTurn>[
+            ChatTurn(role: 'user', content: 'hi'),
+          ],
+          temperature: 1.5,
+          topP: 0.8,
+        ),
+      );
+      expect(request.body['temperature'], 1.0);
+      expect(request.body['top_p'], 0.8);
+      expect(request.body.containsKey('frequency_penalty'), isFalse);
+    });
+
     test('builds anthropic base64 image parts', () {
       final request = adapter.buildChatRequest(
         ChatParams(
@@ -321,6 +357,27 @@ void main() {
         baseUrl: baseUrl,
       );
       expect(request.url, '$baseUrl/models?key=AIza-Test_Key');
+    });
+
+    test('serializes top_p and top_k in generationConfig', () {
+      final request = adapter.buildChatRequest(
+        ChatParams(
+          apiKey: 'AIza-Test_Key',
+          baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+          model: 'gemini-2.5-flash',
+          turns: const <ChatTurn>[
+            ChatTurn(role: 'user', content: 'hi'),
+          ],
+          temperature: 0.4,
+          topP: 0.95,
+          topK: 40,
+        ),
+      );
+      final config = request.body['generationConfig'] as Map<String, dynamic>;
+      expect(config['temperature'], 0.4);
+      expect(config['topP'], 0.95);
+      expect(config['topK'], 40);
+      expect(config.containsKey('frequency_penalty'), isFalse);
     });
 
     test('builds gemini inlineData parts for attachments', () {

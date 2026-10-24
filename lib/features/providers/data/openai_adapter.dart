@@ -22,6 +22,9 @@ class OpenAIAdapter extends ProviderAdapter {
         ],
         'stream': true,
         if (params.temperature != null) 'temperature': params.temperature,
+        if (params.topP != null) 'top_p': params.topP,
+        if (params.frequencyPenalty != null)
+          'frequency_penalty': params.frequencyPenalty,
         if (params.maxTokens != null) 'max_tokens': params.maxTokens,
       },
     );

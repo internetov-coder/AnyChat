@@ -50,6 +50,9 @@ class ChatParams {
     required this.model,
     required this.turns,
     this.temperature,
+    this.topP,
+    this.frequencyPenalty,
+    this.topK,
     this.maxTokens,
     this.timeout = const Duration(seconds: 90),
   });
@@ -59,6 +62,9 @@ class ChatParams {
   final String model;
   final List<ChatTurn> turns;
   final double? temperature;
+  final double? topP;
+  final double? frequencyPenalty;
+  final int? topK;
   final int? maxTokens;
   final Duration timeout;
 }

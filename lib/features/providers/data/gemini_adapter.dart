@@ -37,10 +37,15 @@ class GeminiAdapter extends ProviderAdapter {
             ],
           },
         'contents': contents,
-        if (params.temperature != null || params.maxTokens != null)
+        if (params.temperature != null ||
+            params.topP != null ||
+            params.topK != null ||
+            params.maxTokens != null)
           'generationConfig': <String, dynamic>{
             if (params.temperature != null)
               'temperature': params.temperature,
+            if (params.topP != null) 'topP': params.topP,
+            if (params.topK != null) 'topK': params.topK,
             if (params.maxTokens != null)
               'maxOutputTokens': params.maxTokens,
           },

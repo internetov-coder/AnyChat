@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/errors/debug_log.dart';
+import '../../../core/network/api_format.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../models/presentation/models_screen.dart';
 import '../../providers/domain/provider_registry.dart';
@@ -25,6 +26,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       TextEditingController(text: '90');
   final TextEditingController _systemPromptController =
       TextEditingController();
+  final TextEditingController _contextLimitController =
+      TextEditingController();
+  final TextEditingController _historyDepthController =
+      TextEditingController();
   bool _synced = false;
 
   @override
@@ -32,6 +37,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _maxTokensController.dispose();
     _timeoutController.dispose();
     _systemPromptController.dispose();
+    _contextLimitController.dispose();
+    _historyDepthController.dispose();
     super.dispose();
   }
 
@@ -40,6 +47,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _maxTokensController.text = settings.maxTokens?.toString() ?? '';
     _timeoutController.text = settings.timeoutSeconds.toString();
     _systemPromptController.text = settings.systemPrompt;
+    _contextLimitController.text = settings.contextLimit?.toString() ?? '';
+    _historyDepthController.text = settings.historyDepth?.toString() ?? '';
   }
 
   SettingsController get _controller =>
@@ -61,6 +70,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (parsed == null || parsed <= 0) return;
     final clamped = parsed < 1 ? 1 : (parsed > 600 ? 600 : parsed);
     _controller.setTimeoutSeconds(clamped);
+  }
+
+  void _onContextLimitChanged(String value) {
+    final raw = value.trim();
+    if (raw.isEmpty) {
+      _controller.setContextLimit(null);
+      return;
+    }
+    final parsed = int.tryParse(raw);
+    if (parsed != null && parsed >= 1) {
+      _controller.setContextLimit(parsed);
+    }
+  }
+
+  void _onHistoryDepthChanged(String value) {
+    final raw = value.trim();
+    if (raw.isEmpty) {
+      _controller.setHistoryDepth(null);
+      return;
+    }
+    final parsed = int.tryParse(raw);
+    if (parsed != null && parsed >= 1) {
+      _controller.setHistoryDepth(parsed);
+    }
   }
 
   Future<void> _showDebugLog() async {
@@ -243,6 +276,102 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               ),
               const SizedBox(height: 8),
+            ],
+          ),
+          _section(
+            context,
+            l10n.advancedSettings,
+            <Widget>[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'top_p = ${settings.topP.toStringAsFixed(2)}',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    Slider(
+                      value: settings.topP,
+                      min: 0,
+                      max: 1,
+                      divisions: 100,
+                      label: settings.topP.toStringAsFixed(2),
+                      onChanged: (double value) => _controller.setTopP(value),
+                    ),
+                    if (provider.format == ApiFormat.openai) ...<Widget>[
+                      Text(
+                        'frequency_penalty = '
+                        '${settings.frequencyPenalty.toStringAsFixed(2)}',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      Slider(
+                        value: settings.frequencyPenalty,
+                        min: -2,
+                        max: 2,
+                        divisions: 40,
+                        label: settings.frequencyPenalty.toStringAsFixed(2),
+                        onChanged: (double value) =>
+                            _controller.setFrequencyPenalty(value),
+                      ),
+                    ],
+                    if (provider.format == ApiFormat.gemini) ...<Widget>[
+                      Row(
+                        children: <Widget>[
+                          Text(
+                            'top_k',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          const Spacer(),
+                          Switch(
+                            value: settings.topK != null,
+                            onChanged: (bool enabled) =>
+                                _controller.setTopK(enabled ? 40 : null),
+                          ),
+                        ],
+                      ),
+                      if (settings.topK != null)
+                        Slider(
+                          value: (settings.topK ?? 40).toDouble(),
+                          min: 1,
+                          max: 100,
+                          divisions: 99,
+                          label: '${settings.topK}',
+                          onChanged: (double value) =>
+                              _controller.setTopK(value.round()),
+                        ),
+                    ],
+                  ],
+                ),
+              ),
+              TextField(
+                controller: _contextLimitController,
+                keyboardType: TextInputType.number,
+                onChanged: _onContextLimitChanged,
+                decoration: InputDecoration(
+                  labelText: l10n.contextLimitLabel,
+                  helperText: l10n.contextLimitHint,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+              ),
+              TextField(
+                controller: _historyDepthController,
+                keyboardType: TextInputType.number,
+                onChanged: _onHistoryDepthChanged,
+                decoration: InputDecoration(
+                  labelText: l10n.historyDepthLabel,
+                  helperText: l10n.historyDepthHint,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+              ),
             ],
           ),
           _section(

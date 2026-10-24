@@ -48,6 +48,20 @@ class SettingsController extends _$SettingsController {
   Future<void> setSystemPrompt(String value) =>
       _update((s) => s.copyWith(systemPrompt: value));
 
+  Future<void> setTopP(double value) => _update((s) => s.copyWith(topP: value));
+
+  Future<void> setFrequencyPenalty(double value) =>
+      _update((s) => s.copyWith(frequencyPenalty: value));
+
+  Future<void> setTopK(int? value) =>
+      _update((s) => s.copyWith(topK: value));
+
+  Future<void> setContextLimit(int? value) =>
+      _update((s) => s.copyWith(contextLimit: value));
+
+  Future<void> setHistoryDepth(int? value) =>
+      _update((s) => s.copyWith(historyDepth: value));
+
   Future<void> selectProvider(String providerId) => _update(
         (s) => s
             .copyWith(selectedProviderId: providerId)

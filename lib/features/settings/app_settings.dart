@@ -13,6 +13,11 @@ class AppSettings {
     this.maxTokens,
     this.timeoutSeconds = 90,
     this.systemPrompt = '',
+    this.topP = 1.0,
+    this.frequencyPenalty = 0.0,
+    this.topK,
+    this.contextLimit,
+    this.historyDepth,
     this.selectedProviderId = 'openai',
     this.selectedModelId,
     this.modelContextWindow,
@@ -30,6 +35,22 @@ class AppSettings {
   final int? maxTokens;
   final int timeoutSeconds;
   final String systemPrompt;
+
+  /// Nucleus sampling (sent to every wire format).
+  final double topP;
+
+  /// OpenAI-only repetition penalty.
+  final double frequencyPenalty;
+
+  /// Gemini-only candidate count; `null` = do not send.
+  final int? topK;
+
+  /// Manual context-window override (tokens) for the context bar;
+  /// `null` = use the model metadata (or 128k approx).
+  final int? contextLimit;
+
+  /// Send only the last N messages of the history; `null` = everything.
+  final int? historyDepth;
   final String selectedProviderId;
   final String? selectedModelId;
   final int? modelContextWindow;
@@ -48,6 +69,11 @@ class AppSettings {
       maxTokens: prefs.getInt('max_tokens'),
       timeoutSeconds: prefs.getInt('timeout_seconds') ?? 90,
       systemPrompt: prefs.getString('system_prompt') ?? '',
+      topP: prefs.getDouble('top_p') ?? 1.0,
+      frequencyPenalty: prefs.getDouble('frequency_penalty') ?? 0.0,
+      topK: prefs.getInt('top_k'),
+      contextLimit: prefs.getInt('context_limit'),
+      historyDepth: prefs.getInt('history_depth'),
       selectedProviderId: prefs.getString('selected_provider') ?? 'openai',
       selectedModelId: prefs.getString('selected_model'),
       modelContextWindow: prefs.getInt('model_context_window'),
@@ -76,6 +102,11 @@ class AppSettings {
     Object? maxTokens = _unspecified,
     int? timeoutSeconds,
     String? systemPrompt,
+    double? topP,
+    double? frequencyPenalty,
+    Object? topK = _unspecified,
+    Object? contextLimit = _unspecified,
+    Object? historyDepth = _unspecified,
     String? selectedProviderId,
     Object? selectedModelId = _unspecified,
     Object? modelContextWindow = _unspecified,
@@ -93,6 +124,15 @@ class AppSettings {
           identical(maxTokens, _unspecified) ? this.maxTokens : maxTokens as int?,
       timeoutSeconds: timeoutSeconds ?? this.timeoutSeconds,
       systemPrompt: systemPrompt ?? this.systemPrompt,
+      topP: topP ?? this.topP,
+      frequencyPenalty: frequencyPenalty ?? this.frequencyPenalty,
+      topK: identical(topK, _unspecified) ? this.topK : topK as int?,
+      contextLimit: identical(contextLimit, _unspecified)
+          ? this.contextLimit
+          : contextLimit as int?,
+      historyDepth: identical(historyDepth, _unspecified)
+          ? this.historyDepth
+          : historyDepth as int?,
       selectedProviderId: selectedProviderId ?? this.selectedProviderId,
       selectedModelId: identical(selectedModelId, _unspecified)
           ? this.selectedModelId
@@ -132,6 +172,11 @@ class AppSettings {
     await _setOrNull(prefs, 'max_tokens', maxTokens);
     await prefs.setInt('timeout_seconds', timeoutSeconds);
     await prefs.setString('system_prompt', systemPrompt);
+    await prefs.setDouble('top_p', topP);
+    await prefs.setDouble('frequency_penalty', frequencyPenalty);
+    await _setOrNull(prefs, 'top_k', topK);
+    await _setOrNull(prefs, 'context_limit', contextLimit);
+    await _setOrNull(prefs, 'history_depth', historyDepth);
     await prefs.setString('selected_provider', selectedProviderId);
     await _setOrNull(prefs, 'selected_model', selectedModelId);
     await _setOrNull(prefs, 'model_context_window', modelContextWindow);

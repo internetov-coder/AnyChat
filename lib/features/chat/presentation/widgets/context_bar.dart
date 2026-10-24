@@ -29,9 +29,13 @@ class ContextBar extends ConsumerWidget {
           loading: () => const AppSettings(),
           error: (Object error, StackTrace stack) => const AppSettings(),
         );
+    final override = settings.contextLimit;
     final window = settings.modelContextWindow;
-    final limit = window ?? _defaultLimit;
-    final approximate = window == null || settings.modelContextApproximate;
+    final limit = (override != null && override > 0)
+        ? override
+        : (window ?? _defaultLimit);
+    final approximate = override == null &&
+        (window == null || settings.modelContextApproximate);
 
     final used = estimateConversationTokens(<String>[
       if (systemPrompt.trim().isNotEmpty) systemPrompt,

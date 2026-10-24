@@ -233,6 +233,9 @@ class ChatSession extends _$ChatSession {
         model: session.model,
         turns: turns,
         temperature: session.settings.temperature,
+        topP: session.settings.topP,
+        frequencyPenalty: session.settings.frequencyPenalty,
+        topK: session.settings.topK,
         maxTokens: session.settings.maxTokens,
         timeout: Duration(seconds: session.settings.timeoutSeconds),
       );
@@ -331,9 +334,14 @@ class ChatSession extends _$ChatSession {
     bool withAttachments = true,
   }) {
     final system = _systemTurnFor(session);
+    var source = history;
+    final depth = session.settings.historyDepth;
+    if (depth != null && depth > 0 && source.length > depth) {
+      source = source.sublist(source.length - depth);
+    }
     return <ChatTurn>[
       ?system,
-      for (final message in history)
+      for (final message in source)
         if ((message.role == 'user' || message.role == 'assistant') &&
             (message.content.trim().isNotEmpty ||
                 message.attachments.isNotEmpty))
@@ -373,6 +381,9 @@ class ChatSession extends _$ChatSession {
       model: session.model,
       turns: turns,
       temperature: session.settings.temperature,
+      topP: session.settings.topP,
+      frequencyPenalty: session.settings.frequencyPenalty,
+      topK: session.settings.topK,
       maxTokens: session.settings.maxTokens,
       timeout: Duration(seconds: session.settings.timeoutSeconds),
     );
