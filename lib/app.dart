@@ -23,20 +23,31 @@ class AnyChatApp extends ConsumerWidget {
       error: (Object error, StackTrace stack) => const AppSettings(),
     );
     return DynamicColorBuilder(
-      builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) =>
-          _buildApp(settings, lightDynamic, darkDynamic),
+      builder: (lightDynamic, darkDynamic) {
+        // `dynamic_color` 2.x hands out the ColorScheme of
+        // `package:material_ui`, while ThemeData expects Flutter's own
+        // ColorScheme. Re-seed Flutter's scheme from the dynamic primary
+        // color (null on devices without Material You).
+        final lightSeed = lightDynamic?.primary;
+        final darkSeed = darkDynamic?.primary;
+        return _buildApp(settings, lightSeed, darkSeed);
+      },
     );
   }
 
   Widget _buildApp(
     AppSettings settings,
-    ColorScheme? lightDynamic,
-    ColorScheme? darkDynamic,
+    Color? lightSeed,
+    Color? darkSeed,
   ) {
-    final lightScheme = lightDynamic ??
-        ColorScheme.fromSeed(seedColor: _seed, brightness: Brightness.light);
-    final darkScheme = darkDynamic ??
-        ColorScheme.fromSeed(seedColor: _seed, brightness: Brightness.dark);
+    final lightScheme = ColorScheme.fromSeed(
+      seedColor: lightSeed ?? _seed,
+      brightness: Brightness.light,
+    );
+    final darkScheme = ColorScheme.fromSeed(
+      seedColor: darkSeed ?? _seed,
+      brightness: Brightness.dark,
+    );
     final localeCode = settings.localeCode;
     return MaterialApp(
       title: 'AnyChat',
