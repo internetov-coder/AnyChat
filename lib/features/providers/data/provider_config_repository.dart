@@ -11,7 +11,7 @@ class ProviderConfigRepository {
   final AppDatabase _db;
 
   Stream<List<CustomProvider>> watchAll() {
-    final query = _db.select(_db.providersConfigs)
+    final query = _db.select(_db.providersConfig)
       ..orderBy([(t) => OrderingTerm.asc(t.id)]);
     return query.watch().map(
           (rows) => rows.map(CustomProvider.fromRow).toList(),
@@ -19,7 +19,7 @@ class ProviderConfigRepository {
   }
 
   Future<CustomProvider?> getProvider(String providerId) async {
-    final query = _db.select(_db.providersConfigs)
+    final query = _db.select(_db.providersConfig)
       ..where((t) => t.providerId.equals(providerId));
     final row = await query.getSingleOrNull();
     return row == null ? null : CustomProvider.fromRow(row);
@@ -33,7 +33,7 @@ class ProviderConfigRepository {
   }) async {
     final id = '${DateTime.now().microsecondsSinceEpoch}';
     final url = normalizeEndpoint(baseUrl);
-    await _db.into(_db.providersConfigs).insert(
+    await _db.into(_db.providersConfig).insert(
           ProvidersConfigCompanion.insert(
             providerId: id,
             name: Value(name),
@@ -57,13 +57,13 @@ class ProviderConfigRepository {
           : Value(normalizeEndpoint(baseUrl)),
       format: format == null ? const Value.absent() : Value(format.name),
     );
-    return (_db.update(_db.providersConfigs)
+    return (_db.update(_db.providersConfig)
           ..where((t) => t.providerId.equals(providerId)))
         .write(companion);
   }
 
   Future<void> deleteProvider(String providerId) {
-    return (_db.delete(_db.providersConfigs)
+    return (_db.delete(_db.providersConfig)
           ..where((t) => t.providerId.equals(providerId)))
         .go();
   }

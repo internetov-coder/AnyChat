@@ -244,7 +244,7 @@ class ProvidersScreen extends ConsumerWidget {
 
 /// Create/edit dialog: name, endpoint (Base URL), wire format, API key.
 class _ProviderEditor extends ConsumerStatefulWidget {
-  const _ProviderEditor({super.key, this.existing});
+  const _ProviderEditor({this.existing});
 
   final CustomProvider? existing;
 

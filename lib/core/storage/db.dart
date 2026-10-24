@@ -81,9 +81,9 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(chats, chats.usageThinking);
           }
           if (from < 4) {
-            await m.addColumn(providersConfigs, providersConfigs.name);
-            await m.addColumn(providersConfigs, providersConfigs.baseUrl);
-            await m.addColumn(providersConfigs, providersConfigs.format);
+            await m.addColumn(providersConfig, providersConfig.name);
+            await m.addColumn(providersConfig, providersConfig.baseUrl);
+            await m.addColumn(providersConfig, providersConfig.format);
             await _backfillCustomProviders();
           }
         },
@@ -92,11 +92,11 @@ class AppDatabase extends _$AppDatabase {
   /// Fills the new custom-provider columns for rows created while presets
   /// still existed (keeps the stored API keys working under the same id).
   Future<void> _backfillCustomProviders() async {
-    final rows = await select(providersConfigs).get();
+    final rows = await select(providersConfig).get();
     for (final row in rows) {
       final legacy = _legacyProviders[row.providerId];
       if (legacy == null) continue;
-      await (update(providersConfigs)..where((t) => t.id.equals(row.id)))
+      await (update(providersConfig)..where((t) => t.id.equals(row.id)))
           .write(ProvidersConfigCompanion(
         name: Value(legacy.name),
         baseUrl: Value(row.baseUrlOverride ?? legacy.baseUrl),

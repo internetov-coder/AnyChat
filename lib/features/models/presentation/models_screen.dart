@@ -169,7 +169,7 @@ class _ModelsScreenState extends ConsumerState<ModelsScreen> {
                 children: <Widget>[
                   for (final model in filtered)
                     _ModelTile(
-                      key: ValueKey<String>('${providerId}/${model.id}'),
+                      key: ValueKey<String>('$providerId/${model.id}'),
                       model: model,
                       providerId: providerId,
                       selected: model.id == selectedModelId,

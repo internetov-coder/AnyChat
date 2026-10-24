@@ -26,6 +26,8 @@ void main() {
         db.ProviderConfig(
           id: 2,
           providerId: 'legacy-vercel',
+          name: '',
+          format: 'openai',
           baseUrl: 'https://ai-gateway.vercel.sh/v1',
         ),
       );
@@ -39,6 +41,7 @@ void main() {
         db.ProviderConfig(
           id: 3,
           providerId: 'weird',
+          name: '',
           baseUrl: 'https://y.example',
           format: 'nonsense',
         ),
@@ -53,6 +56,7 @@ void main() {
             id: 4,
             providerId: 'p-${format.name}',
             baseUrl: 'https://z.example',
+            name: '',
             format: format.name,
           ),
         );
