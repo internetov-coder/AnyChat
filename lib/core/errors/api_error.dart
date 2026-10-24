@@ -183,6 +183,19 @@ class ApiError implements Exception {
     );
   }
 
+  /// Rebuilds a displayable error from a persisted type name and details
+  /// (see [Message.errorType] in the chat schema).
+  factory ApiError.fromStored(String? typeName, {String? details}) {
+    ApiErrorType type = ApiErrorType.unknown;
+    for (final candidate in ApiErrorType.values) {
+      if (candidate.name == typeName) {
+        type = candidate;
+        break;
+      }
+    }
+    return ApiError(type: type, details: details, retryAfter: 30);
+  }
+
   /// Converts a transport-level [DioException] into a normalized error.
   ///
   /// Callers should filter `DioExceptionType.cancel` (user pressed Stop)

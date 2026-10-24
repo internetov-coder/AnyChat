@@ -106,6 +106,7 @@
   "providerSection": "Provider & key",
   "generateSection": "Generation",
   "themeMode": "Theme",
+  "appearanceSection": "Appearance",
   "themeSystem": "System",
   "themeLight": "Light",
   "themeDark": "Dark",

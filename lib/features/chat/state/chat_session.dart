@@ -8,7 +8,6 @@ import '../../../features/providers/data/provider_adapter.dart';
 import '../../../features/providers/domain/provider_registry.dart';
 import '../../settings/app_settings.dart';
 import '../../settings/state/settings_controller.dart';
-import '../data/chat_repository.dart';
 import '../data/message_repository.dart';
 import '../domain/models.dart';
 

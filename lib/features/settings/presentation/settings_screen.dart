@@ -1,0 +1,323 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+
+import '../../../core/errors/debug_log.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../providers/domain/provider_registry.dart';
+import '../../providers/presentation/providers_screen.dart';
+import '../app_settings.dart';
+import '../state/settings_controller.dart';
+
+/// Global settings: provider entry point, language, theme, generation
+/// parameters, system prompt and the error debug log.
+class SettingsScreen extends ConsumerStatefulWidget {
+  const SettingsScreen({super.key});
+
+  @override
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  final TextEditingController _maxTokensController = TextEditingController();
+  final TextEditingController _timeoutController =
+      TextEditingController(text: '90');
+  final TextEditingController _systemPromptController =
+      TextEditingController();
+  bool _synced = false;
+
+  @override
+  void dispose() {
+    _maxTokensController.dispose();
+    _timeoutController.dispose();
+    _systemPromptController.dispose();
+    super.dispose();
+  }
+
+  void _syncFromSettings(AppSettings settings) {
+    _synced = true;
+    _maxTokensController.text = settings.maxTokens?.toString() ?? '';
+    _timeoutController.text = settings.timeoutSeconds.toString();
+    _systemPromptController.text = settings.systemPrompt;
+  }
+
+  SettingsController get _controller =>
+      ref.read(settingsControllerProvider.notifier);
+
+  void _onMaxTokensChanged(String value) {
+    final parsed = int.tryParse(value.trim());
+    if (value.trim().isEmpty) {
+      _controller.setMaxTokens(null);
+      return;
+    }
+    if (parsed != null && parsed > 0) {
+      _controller.setMaxTokens(parsed);
+    }
+  }
+
+  void _onTimeoutChanged(String value) {
+    final parsed = int.tryParse(value.trim());
+    if (parsed == null || parsed <= 0) return;
+    final clamped = parsed < 1 ? 1 : (parsed > 600 ? 600 : parsed);
+    _controller.setTimeoutSeconds(clamped);
+  }
+
+  Future<void> _showDebugLog() async {
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        final l10n = AppLocalizations.of(dialogContext);
+        return Consumer(
+          builder: (BuildContext ctx, WidgetRef refs, Widget? child) {
+            final entries = refs.watch(debugLogProvider);
+            final reversed = entries.reversed.toList();
+            return AlertDialog(
+              title: Text(l10n.debugLog),
+              content: SizedBox(
+                width: double.maxFinite,
+                height: 320,
+                child: entries.isEmpty
+                    ? Center(child: Text(l10n.debugLogEmpty))
+                    : ListView.builder(
+                        itemCount: reversed.length,
+                        itemBuilder: (BuildContext itemContext, int index) {
+                          final entry = reversed[index];
+                          return ListTile(
+                            dense: true,
+                            title: Text(
+                              entry.raw,
+                              maxLines: 6,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            subtitle: Text(
+                              DateFormat('dd.MM.yyyy HH:mm:ss')
+                                  .format(entry.time),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => refs.read(debugLogProvider.notifier).clear(),
+                  child: Text(l10n.clearLog),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: Text(l10n.cancel),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final loaded = ref.watch(settingsControllerProvider).when(
+          data: (AppSettings value) => value,
+          loading: () => null,
+          error: (Object error, StackTrace stack) => null,
+        );
+    if (loaded != null && !_synced) {
+      _syncFromSettings(loaded);
+    }
+    final settings = loaded ?? const AppSettings();
+    final provider = findProvider(settings.selectedProviderId);
+
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.settingsTitle)),
+      body: ListView(
+        padding: const EdgeInsets.only(bottom: 32),
+        children: <Widget>[
+          _section(
+            context,
+            l10n.providerSection,
+            <Widget>[
+              ListTile(
+                title: Text(l10n.providersTitle),
+                subtitle: Text(provider.displayName),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (BuildContext routeContext) =>
+                        const ProvidersScreen(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          _section(
+            context,
+            l10n.generateSection,
+            <Widget>[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'temperature = ${settings.temperature.toStringAsFixed(2)}',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    Slider(
+                      value: settings.temperature,
+                      min: 0,
+                      max: 2,
+                      divisions: 20,
+                      label: settings.temperature.toStringAsFixed(2),
+                      onChanged: (double value) =>
+                          _controller.setTemperature(value),
+                    ),
+                  ],
+                ),
+              ),
+              TextField(
+                controller: _maxTokensController,
+                keyboardType: TextInputType.number,
+                onChanged: _onMaxTokensChanged,
+                decoration: InputDecoration(
+                  labelText: 'max_tokens',
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+              ),
+              TextField(
+                controller: _timeoutController,
+                keyboardType: TextInputType.number,
+                onChanged: _onTimeoutChanged,
+                decoration: InputDecoration(
+                  labelText: l10n.timeoutLabel,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+              ),
+              TextField(
+                controller: _systemPromptController,
+                minLines: 2,
+                maxLines: 6,
+                onChanged: (String value) => _controller.setSystemPrompt(value),
+                decoration: InputDecoration(
+                  labelText: l10n.systemPromptLabel,
+                  helperText: l10n.systemPromptHint,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+          _section(
+            context,
+            l10n.appearanceSection,
+            <Widget>[
+              ListTile(
+                title: Text(l10n.language),
+                trailing: DropdownButton<String>(
+                  value: settings.localeCode ?? 'auto',
+                  underline: const SizedBox.shrink(),
+                  items: <DropdownMenuItem<String>>[
+                    DropdownMenuItem<String>(
+                      value: 'auto',
+                      child: Text(l10n.langAuto),
+                    ),
+                    const DropdownMenuItem<String>(
+                      value: 'en',
+                      child: Text('English'),
+                    ),
+                    const DropdownMenuItem<String>(
+                      value: 'ru',
+                      child: Text('Русский'),
+                    ),
+                    const DropdownMenuItem<String>(
+                      value: 'uk',
+                      child: Text('Українська'),
+                    ),
+                  ],
+                  onChanged: (String? value) =>
+                      _controller.setLocale(value == 'auto' ? null : value),
+                ),
+              ),
+              ListTile(
+                title: Text(l10n.themeMode),
+                trailing: DropdownButton<String>(
+                  value: settings.themeMode,
+                  underline: const SizedBox.shrink(),
+                  items: <DropdownMenuItem<String>>[
+                    DropdownMenuItem<String>(
+                      value: 'system',
+                      child: Text(l10n.themeSystem),
+                    ),
+                    DropdownMenuItem<String>(
+                      value: 'light',
+                      child: Text(l10n.themeLight),
+                    ),
+                    DropdownMenuItem<String>(
+                      value: 'dark',
+                      child: Text(l10n.themeDark),
+                    ),
+                  ],
+                  onChanged: (String? value) {
+                    if (value == null) return;
+                    _controller.setThemeMode(value);
+                  },
+                ),
+              ),
+            ],
+          ),
+          _section(
+            context,
+            l10n.debugLog,
+            <Widget>[
+              ListTile(
+                title: Text(l10n.debugLog),
+                leading: const Icon(Icons.bug_report_outlined),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: _showDebugLog,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _section(BuildContext context, String title, List<Widget> children) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            title,
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            margin: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              child: Column(children: children),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

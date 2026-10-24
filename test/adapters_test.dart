@@ -7,7 +7,6 @@ import 'package:anychat/features/providers/data/anthropic_adapter.dart';
 import 'package:anychat/features/providers/data/gemini_adapter.dart';
 import 'package:anychat/features/providers/data/openai_adapter.dart';
 import 'package:anychat/features/providers/data/provider_adapter.dart';
-import 'package:anychat/features/providers/domain/model_info.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
