@@ -222,6 +222,26 @@ void main() {
       expect(adapter.lastUsage?.thinkingTokens, 12);
     });
 
+    test('parses thinking levels from gateway catalogs', () {
+      final models = adapter.parseModels(
+        '{"data":['
+        '{"id":"a/qwen-3-32b","reasoning_options":[{"type":"toggle"},'
+        '{"type":"effort","values":["none","low","medium","high"]}]},'
+        '{"id":"m/kimi-k3","reasoning":{"supported_efforts":["max","high","low","none"]}},'
+        '{"id":"plain/text","reasoning_options":[{"type":"budget_tokens","min":1,"max":81920}]}]}',
+      );
+      expect(models, hasLength(3));
+      expect(
+        models[0].reasoningEfforts,
+        <String>['none', 'low', 'medium', 'high'],
+      );
+      expect(
+        models[1].reasoningEfforts,
+        containsAll(<String>['max', 'high', 'low', 'none']),
+      );
+      expect(models[2].reasoningEfforts, isEmpty);
+    });
+
     test('parses Vercel AI Gateway style pricing and context window', () {
       final models = adapter.parseModels(
         '{"data":[{"id":"google/gemini-2.5-flash","name":"Gemini 2.5 Flash",'

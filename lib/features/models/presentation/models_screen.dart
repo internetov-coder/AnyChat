@@ -264,6 +264,7 @@ class _ModelTile extends ConsumerWidget {
               inputPricePerM: model.inputPricePerM,
               outputPricePerM: model.outputPricePerM,
               modalities: model.modalities,
+              reasoningEfforts: model.reasoningEfforts,
             );
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(

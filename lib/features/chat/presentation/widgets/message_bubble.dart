@@ -17,6 +17,7 @@ class MessageBubble extends StatelessWidget {
     required this.message,
     required this.streamingText,
     required this.isStreaming,
+    required this.isLast,
     required this.showRegenerate,
     this.onEdit,
     this.onBranch,
@@ -26,6 +27,7 @@ class MessageBubble extends StatelessWidget {
   final Message message;
   final String streamingText;
   final bool isStreaming;
+  final bool isLast;
   final bool showRegenerate;
   final VoidCallback? onEdit;
   final VoidCallback? onBranch;
@@ -43,10 +45,12 @@ class MessageBubble extends StatelessWidget {
         ? null
         : ApiError.fromStored(storedError, details: message.errorDetails);
 
-    final showCopy = !isStreaming && message.content.trim().isNotEmpty;
+    final showCopy =
+        isLast && !isStreaming && message.content.trim().isNotEmpty;
+    final showBranch = onBranch != null && isLast;
     final hasActions = showCopy ||
         onEdit != null ||
-        onBranch != null ||
+        showBranch ||
         (onRegenerate != null && error == null);
 
     final generatingStyle = theme.textTheme.bodyMedium?.copyWith(
@@ -123,6 +127,7 @@ class MessageBubble extends StatelessWidget {
                   tooltip: l10n.copy,
                   iconSize: 18,
                   visualDensity: VisualDensity.compact,
+                  color: scheme.onSurfaceVariant,
                   icon: const Icon(Icons.content_copy),
                 ),
               if (onEdit != null)
@@ -131,14 +136,16 @@ class MessageBubble extends StatelessWidget {
                   tooltip: l10n.editMessage,
                   iconSize: 18,
                   visualDensity: VisualDensity.compact,
+                  color: scheme.onSurfaceVariant,
                   icon: const Icon(Icons.edit_outlined),
                 ),
-              if (onBranch != null)
+              if (showBranch)
                 IconButton(
                   onPressed: onBranch,
                   tooltip: l10n.branchFromHere,
                   iconSize: 18,
                   visualDensity: VisualDensity.compact,
+                  color: scheme.onSurfaceVariant,
                   icon: const Icon(Icons.account_tree_outlined),
                 ),
               if (onRegenerate != null && error == null)
@@ -147,6 +154,7 @@ class MessageBubble extends StatelessWidget {
                   tooltip: l10n.regenerate,
                   iconSize: 18,
                   visualDensity: VisualDensity.compact,
+                  color: scheme.onSurfaceVariant,
                   icon: const Icon(Icons.refresh),
                 ),
             ],

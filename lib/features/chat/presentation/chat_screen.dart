@@ -12,7 +12,6 @@ import '../state/chat_providers.dart';
 import '../state/chat_session.dart';
 import '../state/current_chat.dart';
 import 'widgets/chat_composer.dart';
-import 'widgets/context_bar.dart';
 import 'widgets/context_circle.dart';
 import 'widgets/menu_glyph.dart';
 import 'widgets/message_bubble.dart';
@@ -224,11 +223,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     return Column(
       children: <Widget>[
-        ContextBar(
-          used: usage.used,
-          limit: usage.limit,
-          approximate: usage.approximate,
-        ),
         Expanded(
           child: messages.isEmpty
               ? Center(
@@ -255,6 +249,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       message: message,
                       streamingText: session.streamText,
                       isStreaming: isStreaming,
+                      isLast: isLast,
                       showRegenerate: canRegenerate,
                       onEdit: message.role == 'user'
                           ? () => _editMessage(message)
@@ -278,8 +273,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ContextCircle(
                 used: usage.used,
                 limit: usage.limit,
-                onTap: () =>
-                    _showContextStats(l10n, chat, usage.used, usage.limit),
+                onTap: () => _showContextStats(
+                  l10n,
+                  chat,
+                  usage.used,
+                  usage.limit,
+                  usage.approximate,
+                ),
               ),
             ],
           ),
@@ -303,6 +303,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     Chat chat,
     int used,
     int limit,
+    bool approximate,
   ) {
     final free = limit > used ? limit - used : 0;
     showDialog<void>(
@@ -316,6 +317,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             children: <Widget>[
               _statRow(dl.statUsed, formatTokenCount(used)),
               _statRow(dl.statFree, formatTokenCount(free)),
+              if (approximate)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    '≈ ${dl.approximateLabel}',
+                    style: Theme.of(dialogContext).textTheme.bodySmall,
+                  ),
+                ),
               const Divider(height: 16),
               _statRow(dl.statInput, formatTokenCount(chat.usageInput)),
               _statRow(dl.statOutput, formatTokenCount(chat.usageOutput)),

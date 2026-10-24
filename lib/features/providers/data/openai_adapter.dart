@@ -133,6 +133,7 @@ class OpenAIAdapter extends ProviderAdapter {
         inputPricePerM: inputPrice,
         outputPricePerM: outputPrice,
         modalities: mediaModalitiesFor(id, declared: declared),
+        reasoningEfforts: _reasoningEfforts(item),
       ));
     }
     return result;
@@ -168,6 +169,34 @@ class OpenAIAdapter extends ProviderAdapter {
     final architecture = item['architecture'];
     if (architecture is Map) {
       addAll(architecture['input_modalities']);
+    }
+    return out;
+  }
+
+  /// Thinking levels from the catalogs we know about:
+  /// Vercel `reasoning_options: [{type: effort, values: [...]}]` and
+  /// OpenRouter `reasoning: {supported_efforts: [...]}`.
+  static List<String> _reasoningEfforts(Map item) {
+    final out = <String>[];
+    void addAll(Object? values) {
+      if (values is! Iterable) return;
+      for (final value in values) {
+        final level = '$value';
+        if (level.isNotEmpty && !out.contains(level)) out.add(level);
+      }
+    }
+
+    final options = item['reasoning_options'];
+    if (options is List) {
+      for (final option in options) {
+        if (option is Map && option['type'] == 'effort') {
+          addAll(option['values']);
+        }
+      }
+    }
+    final reasoning = item['reasoning'];
+    if (reasoning is Map) {
+      addAll(reasoning['supported_efforts']);
     }
     return out;
   }

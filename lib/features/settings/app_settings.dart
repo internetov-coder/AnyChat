@@ -27,6 +27,7 @@ class AppSettings {
     this.modelInputPricePerM,
     this.modelOutputPricePerM,
     this.modelModalities = const <ModelModality>{},
+    this.modelReasoningEfforts = const <String>[],
   });
 
   static const Object _unspecified = Object();
@@ -69,6 +70,9 @@ class AppSettings {
   /// Media inputs the selected model supports (drives the attach button).
   final Set<ModelModality> modelModalities;
 
+  /// Thinking levels advertised by the catalog for the selected model.
+  final List<String> modelReasoningEfforts;
+
   factory AppSettings.fromPrefs(SharedPreferences prefs) {
     return AppSettings(
       themeMode: prefs.getString('theme_mode') ?? 'system',
@@ -91,7 +95,14 @@ class AppSettings {
       modelInputPricePerM: prefs.getDouble('model_input_price'),
       modelOutputPricePerM: prefs.getDouble('model_output_price'),
       modelModalities: _parseModalities(prefs.getString('model_modalities')),
+      modelReasoningEfforts:
+          _parseTokens(prefs.getString('model_reasoning_efforts')),
     );
+  }
+
+  static List<String> _parseTokens(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return const <String>[];
+    return raw.split(' ').where((t) => t.isNotEmpty).toList();
   }
 
   static Set<ModelModality> _parseModalities(String? raw) {
@@ -126,6 +137,7 @@ class AppSettings {
     Object? modelInputPricePerM = _unspecified,
     Object? modelOutputPricePerM = _unspecified,
     Set<ModelModality>? modelModalities,
+    List<String>? modelReasoningEfforts,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -164,6 +176,8 @@ class AppSettings {
           ? this.modelOutputPricePerM
           : modelOutputPricePerM as double?,
       modelModalities: modelModalities ?? this.modelModalities,
+      modelReasoningEfforts:
+          modelReasoningEfforts ?? this.modelReasoningEfforts,
     );
   }
 
@@ -176,6 +190,7 @@ class AppSettings {
       modelInputPricePerM: null,
       modelOutputPricePerM: null,
       modelModalities: const <ModelModality>{},
+      modelReasoningEfforts: const <String>[],
     );
   }
 
@@ -193,6 +208,11 @@ class AppSettings {
     await _setOrNull(prefs, 'history_depth', historyDepth);
     await prefs.setString('accent_color', accentColor);
     await prefs.setString('reasoning_effort', reasoningEffort);
+    await _setOrNull(
+      prefs,
+      'model_reasoning_efforts',
+      modelReasoningEfforts.isEmpty ? null : modelReasoningEfforts.join(' '),
+    );
     await prefs.setString('selected_provider', selectedProviderId);
     await _setOrNull(prefs, 'selected_model', selectedModelId);
     await _setOrNull(prefs, 'model_context_window', modelContextWindow);

@@ -64,6 +64,15 @@ void main() {
       );
     });
 
+    test('reasoning model heuristics', () {
+      expect(isReasoningModel('o3-mini'), isTrue);
+      expect(isReasoningModel('openai/o1-preview'), isTrue);
+      expect(isReasoningModel('deepseek-r1'), isTrue);
+      expect(isReasoningModel('some-thinking-model'), isTrue);
+      expect(isReasoningModel('gpt-4o-mini'), isFalse);
+      expect(isReasoningModel('llama-3.3-70b-instruct'), isFalse);
+    });
+
     test('declared catalog capabilities are unioned with inference', () {
       final merged = mediaModalitiesFor(
         'some-plain-model',

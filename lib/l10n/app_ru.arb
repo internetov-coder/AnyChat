@@ -179,8 +179,8 @@
   "contextDetails": "Статистика контекста",
   "statUsed": "Занятый контекст",
   "statFree": "Свободный",
-  "statInput": "Инпут",
-  "statOutput": "Аутпут",
-  "statThinking": "Тхинкинг",
+  "statInput": "input",
+  "statOutput": "output",
+  "statThinking": "thinking",
   "reasoningOff": "Не отправлять"
 }

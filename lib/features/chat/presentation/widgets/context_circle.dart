@@ -1,10 +1,43 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/storage/token_estimator.dart';
 import '../../../../l10n/app_localizations.dart';
-import 'context_bar.dart';
+import '../../../settings/app_settings.dart';
+import '../../domain/models.dart';
 
-/// Small donut above the composer showing how full the context window is;
-/// tapping it opens the detailed usage/usage-stats dialog.
+/// Shared context statistics for the circle indicator and its dialog.
+///
+/// Returns `(used, limit, approximate)` for the current settings and the
+/// messages of the active branch.
+({int used, int limit, bool approximate}) computeContextUsage(
+  AppSettings settings,
+  List<Message> messages,
+  String systemPrompt,
+) {
+  final override = settings.contextLimit;
+  final window = settings.modelContextWindow;
+  final limit = (override != null && override > 0)
+      ? override
+      : (window ?? 128000);
+  final approximate = override == null &&
+      (window == null || settings.modelContextApproximate);
+  final used = estimateConversationTokens(<String>[
+    if (systemPrompt.trim().isNotEmpty) systemPrompt,
+    for (final message in messages)
+      if (message.content.trim().isNotEmpty) message.content,
+  ]);
+  return (used: used, limit: limit, approximate: approximate);
+}
+
+/// Green / amber / red status color for a context fill ratio.
+Color contextStatusColor(double ratio) {
+  if (ratio < 0.6) return const Color(0xFF2E7D32);
+  if (ratio <= 0.85) return const Color(0xFFF9A825);
+  return const Color(0xFFE53935);
+}
+
+/// Donut above the composer showing how full the context window is.
+/// Tapping opens the detailed statistics dialog (handled by the parent).
 class ContextCircle extends StatelessWidget {
   const ContextCircle({
     super.key,
@@ -28,34 +61,34 @@ class ContextCircle extends StatelessWidget {
     return Tooltip(
       message: l10n.statUsed,
       child: InkWell(
-      customBorder: const CircleBorder(),
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.all(4),
-        child: CustomPaint(
-          size: const Size(36, 36),
-          painter: _DonutPainter(
-            ratio: ratio.clamp(0.0, 1.0).toDouble(),
-            color: color,
-            trackColor: scheme.surfaceContainerHighest,
-          ),
-          child: SizedBox(
-            width: 36,
-            height: 36,
-            child: Center(
-              child: Text(
-                percent,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      fontSize: 9,
-                      height: 1,
-                      fontWeight: FontWeight.w600,
-                      color: color,
-                    ),
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: CustomPaint(
+            size: const Size(40, 40),
+            painter: _DonutPainter(
+              ratio: ratio.clamp(0.0, 1.0).toDouble(),
+              color: color,
+              trackColor: scheme.surfaceContainerHighest,
+            ),
+            child: SizedBox(
+              width: 40,
+              height: 40,
+              child: Center(
+                child: Text(
+                  percent,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontSize: 9.5,
+                        height: 1,
+                        fontWeight: FontWeight.w600,
+                        color: color,
+                      ),
+                ),
               ),
             ),
           ),
         ),
-      ),
       ),
     );
   }

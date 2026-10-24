@@ -179,8 +179,8 @@
   "contextDetails": "Context statistics",
   "statUsed": "Used context",
   "statFree": "Free",
-  "statInput": "Input",
-  "statOutput": "Output",
-  "statThinking": "Thinking",
+  "statInput": "input",
+  "statOutput": "output",
+  "statThinking": "thinking",
   "reasoningOff": "Not sent"
 }

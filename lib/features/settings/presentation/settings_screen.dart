@@ -7,6 +7,7 @@ import '../../../core/network/api_format.dart';
 import '../../../core/theme/accent_colors.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../models/presentation/models_screen.dart';
+import '../../providers/domain/model_info.dart';
 import '../../providers/domain/provider_registry.dart';
 import '../../providers/presentation/providers_screen.dart';
 import '../app_settings.dart';
@@ -186,6 +187,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
     final settings = loaded ?? const AppSettings();
     final provider = findProvider(settings.selectedProviderId);
+    // Thinking levels for the selected model: whatever the catalog said
+    // when the model was picked, otherwise the id-based heuristic.
+    var efforts = settings.modelReasoningEfforts;
+    if (efforts.isEmpty &&
+        isReasoningModel(settings.selectedModelId ?? provider.defaultModel)) {
+      efforts = const <String>['low', 'medium', 'high'];
+    }
+    final effortValue = efforts.contains(settings.reasoningEffort)
+        ? settings.reasoningEffort
+        : '';
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsTitle)),
@@ -368,30 +379,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ],
                 ),
               ),
-              if (provider.format == ApiFormat.openai)
+              if (efforts.isNotEmpty)
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                   title: const Text('reasoning_effort'),
                   trailing: DropdownButton<String>(
-                    value: settings.reasoningEffort,
+                    value: effortValue,
                     underline: const SizedBox.shrink(),
                     items: <DropdownMenuItem<String>>[
                       DropdownMenuItem<String>(
                         value: '',
                         child: Text(l10n.reasoningOff),
                       ),
-                      const DropdownMenuItem<String>(
-                        value: 'low',
-                        child: Text('low'),
-                      ),
-                      const DropdownMenuItem<String>(
-                        value: 'medium',
-                        child: Text('medium'),
-                      ),
-                      const DropdownMenuItem<String>(
-                        value: 'high',
-                        child: Text('high'),
-                      ),
+                      for (final String level in efforts)
+                        DropdownMenuItem<String>(
+                          value: level,
+                          child: Text(level),
+                        ),
                     ],
                     onChanged: (String? value) {
                       if (value == null) return;

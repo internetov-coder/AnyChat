@@ -86,6 +86,7 @@ class ModelInfo {
     this.inputPricePerM,
     this.outputPricePerM,
     this.modalities = const <ModelModality>{},
+    this.reasoningEfforts = const <String>[],
   });
 
   /// Wire id sent to the provider (`gpt-4o-mini`, `models/gemini-...` without
@@ -109,6 +110,10 @@ class ModelInfo {
 
   /// Media inputs (image/video/audio) this model accepts.
   final Set<ModelModality> modalities;
+
+  /// Thinking levels the catalog advertises for this model
+  /// (e.g. `none, low, medium, high`); empty = not reasoning-based.
+  final List<String> reasoningEfforts;
 
   /// Whether attachments can be sent to this model at all.
   bool get supportsAttachments => modalities.isNotEmpty;

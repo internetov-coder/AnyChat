@@ -82,6 +82,7 @@ class SettingsController extends _$SettingsController {
     double? inputPricePerM,
     double? outputPricePerM,
     Set<ModelModality> modalities = const <ModelModality>{},
+    List<String> reasoningEfforts = const <String>[],
   }) {
     return _update(
       (s) => s.copyWith(
@@ -92,6 +93,7 @@ class SettingsController extends _$SettingsController {
         modelInputPricePerM: inputPricePerM,
         modelOutputPricePerM: outputPricePerM,
         modelModalities: modalities,
+        modelReasoningEfforts: reasoningEfforts,
       ),
     );
   }

@@ -6,9 +6,11 @@ import '../../domain/models.dart';
 import 'attachment_view.dart';
 
 /// ChatGPT-style composer: one rounded capsule with the "+" attachment
-/// button on the left, the message field and a circular send/stop button
-/// pinned to the bottom-right (primary/error colors keep the icon readable).
-class InputBar extends StatelessWidget {
+/// button on the left, the message field and a circular send button on the
+/// right. The send button is muted while the field is empty and only takes
+/// the accent color when there is something to send; while generating it
+/// turns into a red stop button.
+class InputBar extends StatefulWidget {
   const InputBar({
     super.key,
     required this.controller,
@@ -33,12 +35,41 @@ class InputBar extends StatelessWidget {
   final ValueChanged<int>? onRemoveAttachment;
 
   @override
+  State<InputBar> createState() => _InputBarState();
+}
+
+class _InputBarState extends State<InputBar> {
+  bool _hasText = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _hasText = widget.controller.text.trim().isNotEmpty;
+    widget.controller.addListener(_onTextChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onTextChanged);
+    super.dispose();
+  }
+
+  void _onTextChanged() {
+    final hasText = widget.controller.text.trim().isNotEmpty;
+    if (hasText != _hasText) {
+      setState(() => _hasText = hasText);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final remove = onRemoveAttachment;
-    final canAttach =
-        !isBusy && supportedModalities.isNotEmpty && onAttach != null;
+    final remove = widget.onRemoveAttachment;
+    final canAttach = !widget.isBusy &&
+        widget.supportedModalities.isNotEmpty &&
+        widget.onAttach != null;
+    final sendReady = _hasText && !widget.isBusy;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
@@ -46,16 +77,16 @@ class InputBar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          if (attachments.isNotEmpty)
+          if (widget.attachments.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: <Widget>[
-                  for (var i = 0; i < attachments.length; i++)
+                  for (var i = 0; i < widget.attachments.length; i++)
                     AttachmentChip(
-                      attachment: attachments[i],
+                      attachment: widget.attachments[i],
                       onRemove: remove == null ? null : () => remove(i),
                     ),
                 ],
@@ -64,8 +95,8 @@ class InputBar extends StatelessWidget {
           Stack(
             children: <Widget>[
               TextField(
-                controller: controller,
-                focusNode: focusNode,
+                controller: widget.controller,
+                focusNode: widget.focusNode,
                 minLines: 1,
                 maxLines: 5,
                 textInputAction: TextInputAction.newline,
@@ -78,7 +109,7 @@ class InputBar extends StatelessWidget {
                     icon: const Icon(Icons.add),
                     tooltip:
                         canAttach ? l10n.attach : l10n.unsupportedForModel,
-                    onPressed: canAttach ? onAttach : null,
+                    onPressed: canAttach ? widget.onAttach : null,
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(28),
@@ -92,9 +123,9 @@ class InputBar extends StatelessWidget {
                 child: SizedBox(
                   width: 40,
                   height: 40,
-                  child: isBusy
+                  child: widget.isBusy
                       ? IconButton(
-                          onPressed: onStop,
+                          onPressed: widget.onStop,
                           tooltip: l10n.stop,
                           icon: const Icon(Icons.stop),
                           padding: EdgeInsets.zero,
@@ -104,13 +135,17 @@ class InputBar extends StatelessWidget {
                           ),
                         )
                       : IconButton(
-                          onPressed: onSend,
+                          onPressed: widget.onSend,
                           tooltip: l10n.send,
                           icon: const Icon(Icons.arrow_upward),
                           padding: EdgeInsets.zero,
                           style: IconButton.styleFrom(
-                            backgroundColor: scheme.primary,
-                            foregroundColor: scheme.onPrimary,
+                            backgroundColor: sendReady
+                                ? scheme.primary
+                                : scheme.surfaceContainerHighest,
+                            foregroundColor: sendReady
+                                ? scheme.onPrimary
+                                : scheme.onSurfaceVariant,
                           ),
                         ),
                 ),
