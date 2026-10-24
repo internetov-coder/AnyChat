@@ -107,7 +107,7 @@ jobs:
               continue
             fi
             sha7="${GITHUB_SHA:0:7}"
-            asset="AnyChat-arm64-r${n}"
+            asset="AnyChat-arm64-r${n}.apk"
             cp "build/app/outputs/flutter-apk/app-release.apk" "${asset}"
             gh release create "r${n}" "${asset}" \
               --target "${GITHUB_SHA}" \
