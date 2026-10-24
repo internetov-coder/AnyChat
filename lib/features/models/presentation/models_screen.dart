@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/storage/token_estimator.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../providers/domain/model_info.dart';
 import '../../providers/domain/provider_registry.dart';
@@ -174,6 +175,21 @@ class _ModelsScreenState extends ConsumerState<ModelsScreen> {
   }
 }
 
+/// Compact `128.0K ctx · $0.15/$0.60 per 1M` line for the model tile.
+String _metaLine(ModelInfo model) {
+  final parts = <String>[];
+  final window = model.contextWindow;
+  if (window != null) parts.add('${formatTokenCount(window)} ctx');
+  final inputPrice = model.inputPricePerM;
+  final outputPrice = model.outputPricePerM;
+  if (inputPrice != null || outputPrice != null) {
+    final inPart = inputPrice?.toStringAsFixed(2) ?? '-';
+    final outPart = outputPrice?.toStringAsFixed(2) ?? '-';
+    parts.add('\$$inPart/\$$outPart per 1M');
+  }
+  return parts.join(' · ');
+}
+
 IconData _modalityIcon(ModelModality modality) {
   switch (modality) {
     case ModelModality.image:
@@ -201,14 +217,14 @@ class _ModelTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final inputPrice = model.inputPricePerM;
-    final outputPrice = model.outputPricePerM;
-    final contextWindow = model.contextWindow;
+    final meta = _metaLine(model);
+    final hasIcons = isReasoningModel(model.id) || model.modalities.isNotEmpty;
 
     return ListTile(
       title: Text(model.name, maxLines: 2, overflow: TextOverflow.ellipsis),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Text(
             model.id,
@@ -216,36 +232,37 @@ class _ModelTile extends ConsumerWidget {
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodySmall,
           ),
-          if (inputPrice != null || outputPrice != null)
-            Text(
-              [
-                if (inputPrice != null)
-                  l10n.priceInput(inputPrice.toStringAsFixed(2)),
-                if (outputPrice != null)
-                  l10n.priceOutput(outputPrice.toStringAsFixed(2)),
-              ].join(' · '),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          if (contextWindow != null)
-            Text(
-              l10n.contextWindowLabel(contextWindow),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          if (model.modalities.isNotEmpty || isReasoningModel(model.id))
+          if (meta.isNotEmpty || hasIcons)
             Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
+                  if (meta.isNotEmpty)
+                    Flexible(
+                      child: Text(
+                        meta,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                      ),
+                    ),
                   if (isReasoningModel(model.id))
-                    Padding(
-                      padding: const EdgeInsets.only(right: 6),
+                    const Padding(
+                      padding: EdgeInsets.only(left: 6),
                       child: Icon(Icons.psychology_outlined, size: 14),
                     ),
                   for (final modality in ModelModality.values)
                     if (model.modalities.contains(modality))
                       Padding(
-                        padding: const EdgeInsets.only(right: 6),
+                        padding: const EdgeInsets.only(left: 6),
                         child: Icon(_modalityIcon(modality), size: 14),
                       ),
                 ],
@@ -253,7 +270,6 @@ class _ModelTile extends ConsumerWidget {
             ),
         ],
       ),
-      isThreeLine: true,
       trailing: selected ? Icon(Icons.check_circle, color: scheme.primary) : null,
       onTap: () async {
         await ref.read(settingsControllerProvider.notifier).selectModel(

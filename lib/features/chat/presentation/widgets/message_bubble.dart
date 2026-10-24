@@ -8,9 +8,12 @@ import '../../domain/models.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'attachment_view.dart';
 
-/// A single message row (ChatGPT style): the user's own message is a
-/// rounded `primaryContainer` bubble, assistant/system replies are plain
-/// rendered Markdown directly on the background.
+/// A single message row (ChatGPT style).
+///
+/// The user's message is a rounded `primaryContainer` bubble that hugs its
+/// text; assistant/system replies are plain Markdown on the background.
+/// Action icons live *outside* the bubble, underneath it, so a short
+/// message never produces an oversized bubble.
 class MessageBubble extends StatelessWidget {
   const MessageBubble({
     super.key,
@@ -58,136 +61,154 @@ class MessageBubble extends StatelessWidget {
       color: scheme.onSurfaceVariant,
     );
 
-    final body = Column(
-      crossAxisAlignment:
-          isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-      children: <Widget>[
-        if (message.attachments.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: <Widget>[
-                for (final attachment in message.attachments)
-                  AttachmentPreview(attachment: attachment),
-              ],
-            ),
-          ),
-        if (isStreaming)
-          text.isEmpty
-              ? Text(l10n.generating, style: generatingStyle)
-              : _MessageBody(
-                  content: text,
-                  isUser: isUser,
-                  streaming: isStreaming,
-                )
-        else if (message.content.isNotEmpty)
-          _MessageBody(content: message.content, isUser: isUser)
-        else if (error == null)
-          Text(l10n.generating, style: generatingStyle),
-        if (error != null) ...<Widget>[
-          const SizedBox(height: 6),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+    final content = <Widget>[
+      if (message.attachments.isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 6,
             children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.only(top: 1),
-                child: Icon(
-                  Icons.error_outline,
-                  size: 15,
-                  color: scheme.error,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  localizeApiError(l10n, error),
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: scheme.error),
-                ),
-              ),
+              for (final attachment in message.attachments)
+                AttachmentPreview(attachment: attachment),
             ],
           ),
-          if (showRegenerate)
-            TextButton.icon(
-              onPressed: onRegenerate,
-              icon: const Icon(Icons.refresh, size: 16),
-              label: Text(l10n.retry),
+        ),
+      if (isStreaming)
+        text.isEmpty
+            ? Text(l10n.generating, style: generatingStyle)
+            : _MessageBody(content: text, isUser: isUser, streaming: true)
+      else if (message.content.isNotEmpty)
+        _MessageBody(content: message.content, isUser: isUser)
+      else if (error == null)
+        Text(l10n.generating, style: generatingStyle),
+      if (error != null) ...<Widget>[
+        const SizedBox(height: 6),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.only(top: 1),
+              child: Icon(
+                Icons.error_outline,
+                size: 15,
+                color: scheme.error,
+              ),
             ),
-        ],
-        if (hasActions)
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              if (showCopy)
-                IconButton(
-                  onPressed: () => _copyContent(context, message.content),
-                  tooltip: l10n.copy,
-                  iconSize: 18,
-                  visualDensity: VisualDensity.compact,
-                  color: scheme.onSurfaceVariant,
-                  icon: const Icon(Icons.content_copy),
-                ),
-              if (onEdit != null)
-                IconButton(
-                  onPressed: onEdit,
-                  tooltip: l10n.editMessage,
-                  iconSize: 18,
-                  visualDensity: VisualDensity.compact,
-                  color: scheme.onSurfaceVariant,
-                  icon: const Icon(Icons.edit_outlined),
-                ),
-              if (showBranch)
-                IconButton(
-                  onPressed: onBranch,
-                  tooltip: l10n.branchFromHere,
-                  iconSize: 18,
-                  visualDensity: VisualDensity.compact,
-                  color: scheme.onSurfaceVariant,
-                  icon: const Icon(Icons.account_tree_outlined),
-                ),
-              if (onRegenerate != null && error == null)
-                IconButton(
-                  onPressed: onRegenerate,
-                  tooltip: l10n.regenerate,
-                  iconSize: 18,
-                  visualDensity: VisualDensity.compact,
-                  color: scheme.onSurfaceVariant,
-                  icon: const Icon(Icons.refresh),
-                ),
-            ],
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                localizeApiError(l10n, error),
+                style:
+                    theme.textTheme.bodySmall?.copyWith(color: scheme.error),
+              ),
+            ),
+          ],
+        ),
+        if (showRegenerate)
+          TextButton.icon(
+            onPressed: onRegenerate,
+            icon: const Icon(Icons.refresh, size: 16),
+            label: Text(l10n.retry),
           ),
       ],
-    );
+    ];
 
-    if (!isUser) {
-      // Assistant/system replies: plain on the background, like ChatGPT.
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(16, 3, 12, 3),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.sizeOf(context).width * 0.88,
-          ),
-          child: body,
-        ),
-      );
-    }
-
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-        padding: const EdgeInsets.fromLTRB(14, 10, 10, 4),
+    // The bubble only wraps the message itself: short text -> small bubble.
+    final Widget bubble;
+    if (isUser) {
+      bubble = Container(
         constraints: BoxConstraints(
           maxWidth: MediaQuery.sizeOf(context).width * 0.82,
         ),
+        padding: const EdgeInsets.fromLTRB(14, 8, 12, 6),
         decoration: BoxDecoration(
           color: scheme.primaryContainer,
           borderRadius: BorderRadius.circular(20),
         ),
-        child: body,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: content,
+        ),
+      );
+    } else {
+      bubble = ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width * 0.88,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: content,
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+      child: Align(
+        alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment:
+              isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          children: <Widget>[
+            bubble,
+            if (hasActions)
+              Padding(
+                padding: EdgeInsets.only(
+                  top: 2,
+                  bottom: 2,
+                  left: isUser ? 0 : 4,
+                  right: isUser ? 4 : 0,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    if (showCopy)
+                      IconButton(
+                        onPressed: () =>
+                            _copyContent(context, message.content),
+                        tooltip: l10n.copy,
+                        iconSize: 18,
+                        visualDensity: VisualDensity.compact,
+                        color: scheme.onSurfaceVariant,
+                        icon: const Icon(Icons.content_copy),
+                      ),
+                    if (onEdit != null)
+                      IconButton(
+                        onPressed: onEdit,
+                        tooltip: l10n.editMessage,
+                        iconSize: 18,
+                        visualDensity: VisualDensity.compact,
+                        color: scheme.onSurfaceVariant,
+                        icon: const Icon(Icons.edit_outlined),
+                      ),
+                    if (showBranch)
+                      IconButton(
+                        onPressed: onBranch,
+                        tooltip: l10n.branchFromHere,
+                        iconSize: 18,
+                        visualDensity: VisualDensity.compact,
+                        color: scheme.onSurfaceVariant,
+                        icon: const Icon(Icons.account_tree_outlined),
+                      ),
+                    if (onRegenerate != null && error == null)
+                      IconButton(
+                        onPressed: onRegenerate,
+                        tooltip: l10n.regenerate,
+                        iconSize: 18,
+                        visualDensity: VisualDensity.compact,
+                        color: scheme.onSurfaceVariant,
+                        icon: const Icon(Icons.refresh),
+                      ),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
