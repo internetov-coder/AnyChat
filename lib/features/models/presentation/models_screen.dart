@@ -231,12 +231,17 @@ class _ModelTile extends ConsumerWidget {
               l10n.contextWindowLabel(contextWindow),
               style: Theme.of(context).textTheme.bodySmall,
             ),
-          if (model.modalities.isNotEmpty)
+          if (model.modalities.isNotEmpty || isReasoningModel(model.id))
             Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
+                  if (isReasoningModel(model.id))
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: Icon(Icons.psychology_outlined, size: 14),
+                    ),
                   for (final modality in ModelModality.values)
                     if (model.modalities.contains(modality))
                       Padding(

@@ -71,6 +71,22 @@ class ChatRepository {
     });
   }
 
+  /// Replaces the cumulative usage counters of a chat.
+  Future<void> setUsage(
+    int chatId, {
+    required int input,
+    required int output,
+    required int thinking,
+  }) {
+    return (_db.update(_db.chats)..where((t) => t.id.equals(chatId))).write(
+      ChatsCompanion(
+        usageInput: Value(input),
+        usageOutput: Value(output),
+        usageThinking: Value(thinking),
+      ),
+    );
+  }
+
   Future<void> setActiveBranch(int chatId, int branchId) {
     return (_db.update(_db.chats)..where((t) => t.id.equals(chatId)))
         .write(ChatsCompanion(activeBranchId: Value(branchId)));

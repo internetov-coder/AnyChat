@@ -140,6 +140,23 @@ class AnthropicAdapter extends ProviderAdapter {
         format: ApiFormat.anthropic,
       );
     }
+    if (type == 'message_start') {
+      final message = decoded['message'];
+      final usage = message is Map ? message['usage'] : null;
+      if (usage is Map && usage['input_tokens'] is num) {
+        final target = lastUsage ??= ChatUsage();
+        target.inputTokens = (usage['input_tokens'] as num).toInt();
+      }
+      return '';
+    }
+    if (type == 'message_delta') {
+      final usage = decoded['usage'];
+      if (usage is Map && usage['output_tokens'] is num) {
+        final target = lastUsage ??= ChatUsage();
+        target.outputTokens = (usage['output_tokens'] as num).toInt();
+      }
+      return '';
+    }
     if (type == 'message_stop') return null;
     if (type == 'content_block_delta') {
       final delta = decoded['delta'];

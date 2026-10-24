@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/errors/debug_log.dart';
 import '../../../core/network/api_format.dart';
+import '../../../core/theme/accent_colors.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../models/presentation/models_screen.dart';
 import '../../providers/domain/provider_registry.dart';
@@ -70,6 +71,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (parsed == null || parsed <= 0) return;
     final clamped = parsed < 1 ? 1 : (parsed > 600 ? 600 : parsed);
     _controller.setTimeoutSeconds(clamped);
+  }
+
+  String _accentLabel(AppLocalizations l10n, String key) {
+    switch (key) {
+      case 'black':
+        return l10n.accentBlack;
+      case 'blue':
+        return l10n.accentBlue;
+      case 'lightBlue':
+        return l10n.accentLightBlue;
+      case 'green':
+        return l10n.accentGreen;
+      case 'pink':
+        return l10n.accentPink;
+      case 'red':
+        return l10n.accentRed;
+      case 'orange':
+        return l10n.accentOrange;
+      case 'purple':
+        return l10n.accentPurple;
+      default:
+        return key;
+    }
   }
 
   void _onContextLimitChanged(String value) {
@@ -344,6 +368,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ],
                 ),
               ),
+              if (provider.format == ApiFormat.openai)
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  title: const Text('reasoning_effort'),
+                  trailing: DropdownButton<String>(
+                    value: settings.reasoningEffort,
+                    underline: const SizedBox.shrink(),
+                    items: <DropdownMenuItem<String>>[
+                      DropdownMenuItem<String>(
+                        value: '',
+                        child: Text(l10n.reasoningOff),
+                      ),
+                      const DropdownMenuItem<String>(
+                        value: 'low',
+                        child: Text('low'),
+                      ),
+                      const DropdownMenuItem<String>(
+                        value: 'medium',
+                        child: Text('medium'),
+                      ),
+                      const DropdownMenuItem<String>(
+                        value: 'high',
+                        child: Text('high'),
+                      ),
+                    ],
+                    onChanged: (String? value) {
+                      if (value == null) return;
+                      _controller.setReasoningEffort(value);
+                    },
+                  ),
+                ),
               TextField(
                 controller: _contextLimitController,
                 keyboardType: TextInputType.number,
@@ -428,6 +483,49 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     if (value == null) return;
                     _controller.setThemeMode(value);
                   },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      l10n.accentColor,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: <Widget>[
+                        ChoiceChip(
+                          label: Text(l10n.themeSystem),
+                          selected: settings.accentColor == 'system',
+                          onSelected: (bool selected) =>
+                              _controller.setAccentColor('system'),
+                        ),
+                        for (final MapEntry<String, Color> entry
+                            in kAccentColors.entries)
+                          ChoiceChip(
+                            avatar: Container(
+                              width: 16,
+                              height: 16,
+                              decoration: BoxDecoration(
+                                color: entry.value,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            label: Text(_accentLabel(l10n, entry.key)),
+                            selected: settings.accentColor == entry.key,
+                            onSelected: (bool selected) =>
+                                _controller.setAccentColor(entry.key),
+                          ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],

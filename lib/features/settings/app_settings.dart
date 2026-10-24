@@ -18,6 +18,8 @@ class AppSettings {
     this.topK,
     this.contextLimit,
     this.historyDepth,
+    this.accentColor = 'system',
+    this.reasoningEffort = '',
     this.selectedProviderId = 'openai',
     this.selectedModelId,
     this.modelContextWindow,
@@ -51,6 +53,12 @@ class AppSettings {
 
   /// Send only the last N messages of the history; `null` = everything.
   final int? historyDepth;
+
+  /// Accent seed from `kAccentColors`; `'system'` = dynamic color / default.
+  final String accentColor;
+
+  /// `''` (not sent), `low`, `medium` or `high` - OpenAI reasoning effort.
+  final String reasoningEffort;
   final String selectedProviderId;
   final String? selectedModelId;
   final int? modelContextWindow;
@@ -74,6 +82,8 @@ class AppSettings {
       topK: prefs.getInt('top_k'),
       contextLimit: prefs.getInt('context_limit'),
       historyDepth: prefs.getInt('history_depth'),
+      accentColor: prefs.getString('accent_color') ?? 'system',
+      reasoningEffort: prefs.getString('reasoning_effort') ?? '',
       selectedProviderId: prefs.getString('selected_provider') ?? 'openai',
       selectedModelId: prefs.getString('selected_model'),
       modelContextWindow: prefs.getInt('model_context_window'),
@@ -107,6 +117,8 @@ class AppSettings {
     Object? topK = _unspecified,
     Object? contextLimit = _unspecified,
     Object? historyDepth = _unspecified,
+    String? accentColor,
+    String? reasoningEffort,
     String? selectedProviderId,
     Object? selectedModelId = _unspecified,
     Object? modelContextWindow = _unspecified,
@@ -133,6 +145,8 @@ class AppSettings {
       historyDepth: identical(historyDepth, _unspecified)
           ? this.historyDepth
           : historyDepth as int?,
+      accentColor: accentColor ?? this.accentColor,
+      reasoningEffort: reasoningEffort ?? this.reasoningEffort,
       selectedProviderId: selectedProviderId ?? this.selectedProviderId,
       selectedModelId: identical(selectedModelId, _unspecified)
           ? this.selectedModelId
@@ -177,6 +191,8 @@ class AppSettings {
     await _setOrNull(prefs, 'top_k', topK);
     await _setOrNull(prefs, 'context_limit', contextLimit);
     await _setOrNull(prefs, 'history_depth', historyDepth);
+    await prefs.setString('accent_color', accentColor);
+    await prefs.setString('reasoning_effort', reasoningEffort);
     await prefs.setString('selected_provider', selectedProviderId);
     await _setOrNull(prefs, 'selected_model', selectedModelId);
     await _setOrNull(prefs, 'model_context_window', modelContextWindow);

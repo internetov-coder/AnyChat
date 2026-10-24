@@ -35,10 +35,10 @@
   "@contextUsage": {
     "placeholders": {
       "tokens": {
-        "type": "num"
+        "type": "String"
       },
       "limit": {
-        "type": "num"
+        "type": "String"
       }
     }
   },
@@ -166,5 +166,21 @@
   "contextLimitLabel": "Context limit (tokens)",
   "contextLimitHint": "Empty = from model metadata (or 128k)",
   "historyDepthLabel": "History depth (messages)",
-  "historyDepthHint": "Empty = whole history"
+  "historyDepthHint": "Empty = whole history",
+  "accentColor": "Accent color",
+  "accentBlack": "Black",
+  "accentBlue": "Blue",
+  "accentLightBlue": "Light blue",
+  "accentGreen": "Green",
+  "accentPink": "Pink",
+  "accentRed": "Red",
+  "accentOrange": "Orange",
+  "accentPurple": "Purple",
+  "contextDetails": "Context statistics",
+  "statUsed": "Used context",
+  "statFree": "Free",
+  "statInput": "Input",
+  "statOutput": "Output",
+  "statThinking": "Thinking",
+  "reasoningOff": "Not sent"
 }

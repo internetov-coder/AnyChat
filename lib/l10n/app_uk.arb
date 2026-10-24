@@ -35,10 +35,10 @@
   "@contextUsage": {
     "placeholders": {
       "tokens": {
-        "type": "num"
+        "type": "String"
       },
       "limit": {
-        "type": "num"
+        "type": "String"
       }
     }
   },
@@ -166,5 +166,21 @@
   "contextLimitLabel": "Ліміт контексту (токенів)",
   "contextLimitHint": "Порожньо = з метаданих моделі (або 128k)",
   "historyDepthLabel": "Глибина історії (повідомлень)",
-  "historyDepthHint": "Порожньо = вся історія"
+  "historyDepthHint": "Порожньо = вся історія",
+  "accentColor": "Акцентний колір",
+  "accentBlack": "Чорний",
+  "accentBlue": "Синій",
+  "accentLightBlue": "Блакитний",
+  "accentGreen": "Зелений",
+  "accentPink": "Рожевий",
+  "accentRed": "Червоний",
+  "accentOrange": "Помаранчевий",
+  "accentPurple": "Фіолетовий",
+  "contextDetails": "Статистика контексту",
+  "statUsed": "Зайнятий контекст",
+  "statFree": "Вільний",
+  "statInput": "Вхід",
+  "statOutput": "Вихід",
+  "statThinking": "Тхінкінг",
+  "reasoningOff": "Не надсилати"
 }

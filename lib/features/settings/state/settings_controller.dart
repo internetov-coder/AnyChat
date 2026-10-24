@@ -62,6 +62,12 @@ class SettingsController extends _$SettingsController {
   Future<void> setHistoryDepth(int? value) =>
       _update((s) => s.copyWith(historyDepth: value));
 
+  Future<void> setAccentColor(String value) =>
+      _update((s) => s.copyWith(accentColor: value));
+
+  Future<void> setReasoningEffort(String value) =>
+      _update((s) => s.copyWith(reasoningEffort: value));
+
   Future<void> selectProvider(String providerId) => _update(
         (s) => s
             .copyWith(selectedProviderId: providerId)

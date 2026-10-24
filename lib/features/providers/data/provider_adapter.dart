@@ -53,6 +53,7 @@ class ChatParams {
     this.topP,
     this.frequencyPenalty,
     this.topK,
+    this.reasoningEffort,
     this.maxTokens,
     this.timeout = const Duration(seconds: 90),
   });
@@ -65,6 +66,10 @@ class ChatParams {
   final double? topP;
   final double? frequencyPenalty;
   final int? topK;
+
+  /// `low` / `medium` / `high` for reasoning models (OpenAI-compatible);
+  /// `null` = not sent.
+  final String? reasoningEffort;
   final int? maxTokens;
   final Duration timeout;
 }
@@ -113,6 +118,14 @@ double? pricePerMillion(Object? value) {
   return parsed * 1e6;
 }
 
+/// Usage numbers a provider happens to report mid-stream (never requested
+/// explicitly, so no provider can reject the request because of this).
+class ChatUsage {
+  int? inputTokens;
+  int? outputTokens;
+  int? thinkingTokens;
+}
+
 /// Shared HTTP plumbing; subclasses only describe the wire format.
 abstract class ProviderAdapter {
   ApiFormat get format;
@@ -130,12 +143,17 @@ abstract class ProviderAdapter {
   /// finished, or throws [ApiError] when the provider reported an error.
   String? parseStreamData(String data);
 
+  /// Filled by [parseStreamData] when the provider reports usage
+  /// (Gemini `usageMetadata`, Anthropic `usage`, OpenAI `usage`).
+  ChatUsage? lastUsage;
+
   /// Sends a chat request and yields assistant text as it arrives.
   Stream<String> streamChat(
     ChatParams params, {
     Dio? dio,
     CancelToken? cancelToken,
   }) async* {
+    lastUsage = null;
     final request = buildChatRequest(params);
     final client = dio ?? DioClient.instance;
     final Response<ResponseBody> response;

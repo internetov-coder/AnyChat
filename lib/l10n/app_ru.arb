@@ -35,10 +35,10 @@
   "@contextUsage": {
     "placeholders": {
       "tokens": {
-        "type": "num"
+        "type": "String"
       },
       "limit": {
-        "type": "num"
+        "type": "String"
       }
     }
   },
@@ -166,5 +166,21 @@
   "contextLimitLabel": "Лимит контекста (токенов)",
   "contextLimitHint": "Пусто = из метаданных модели (или 128k)",
   "historyDepthLabel": "Глубина истории (сообщений)",
-  "historyDepthHint": "Пусто = вся история"
+  "historyDepthHint": "Пусто = вся история",
+  "accentColor": "Акцентный цвет",
+  "accentBlack": "Чёрный",
+  "accentBlue": "Синий",
+  "accentLightBlue": "Голубой",
+  "accentGreen": "Зелёный",
+  "accentPink": "Розовый",
+  "accentRed": "Красный",
+  "accentOrange": "Оранжевый",
+  "accentPurple": "Фиолетовый",
+  "contextDetails": "Статистика контекста",
+  "statUsed": "Занятый контекст",
+  "statFree": "Свободный",
+  "statInput": "Инпут",
+  "statOutput": "Аутпут",
+  "statThinking": "Тхинкинг",
+  "reasoningOff": "Не отправлять"
 }

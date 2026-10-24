@@ -9,6 +9,11 @@ class Chats extends Table {
   TextColumn get systemPrompt => text().nullable()();
   IntColumn get activeBranchId => integer().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  /// Cumulative usage reported by the provider (or estimated locally).
+  IntColumn get usageInput => integer().withDefault(const Constant(0))();
+  IntColumn get usageOutput => integer().withDefault(const Constant(0))();
+  IntColumn get usageThinking => integer().withDefault(const Constant(0))();
 }
 
 @DataClassName('Branch')
@@ -50,7 +55,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(driftDatabase(name: 'anychat'));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -58,6 +63,11 @@ class AppDatabase extends _$AppDatabase {
         onUpgrade: (m, from, to) async {
           if (from < 2) {
             await m.addColumn(messages, messages.attachments);
+          }
+          if (from < 3) {
+            await m.addColumn(chats, chats.usageInput);
+            await m.addColumn(chats, chats.usageOutput);
+            await m.addColumn(chats, chats.usageThinking);
           }
         },
       );

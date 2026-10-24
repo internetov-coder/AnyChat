@@ -5,9 +5,9 @@ import '../../../providers/domain/model_info.dart';
 import '../../domain/models.dart';
 import 'attachment_view.dart';
 
-/// ChatGPT-style composer: one rounded capsule with the "+" attachment button
-/// on the left, the message field in the middle and a circular send/stop
-/// button on the right. Attachment chips float above the capsule.
+/// ChatGPT-style composer: one rounded capsule with the "+" attachment
+/// button on the left, the message field and a circular send/stop button
+/// pinned to the bottom-right (primary/error colors keep the icon readable).
 class InputBar extends StatelessWidget {
   const InputBar({
     super.key,
@@ -61,44 +61,65 @@ class InputBar extends StatelessWidget {
                 ],
               ),
             ),
-          TextField(
-            controller: controller,
-            focusNode: focusNode,
-            minLines: 1,
-            maxLines: 5,
-            textInputAction: TextInputAction.newline,
-            decoration: InputDecoration(
-              hintText: l10n.messageInputHint,
-              filled: true,
-              fillColor: scheme.surfaceContainerHigh,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 4,
-                vertical: 12,
+          Stack(
+            children: <Widget>[
+              TextField(
+                controller: controller,
+                focusNode: focusNode,
+                minLines: 1,
+                maxLines: 5,
+                textInputAction: TextInputAction.newline,
+                decoration: InputDecoration(
+                  hintText: l10n.messageInputHint,
+                  filled: true,
+                  fillColor: scheme.surfaceContainerHigh,
+                  contentPadding: const EdgeInsets.fromLTRB(4, 14, 52, 14),
+                  prefixIcon: IconButton(
+                    icon: const Icon(Icons.add),
+                    tooltip:
+                        canAttach ? l10n.attach : l10n.unsupportedForModel,
+                    onPressed: canAttach ? onAttach : null,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(28),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
               ),
-              prefixIcon: IconButton(
-                icon: const Icon(Icons.add),
-                tooltip: canAttach ? l10n.attach : l10n.unsupportedForModel,
-                onPressed: canAttach ? onAttach : null,
-              ),
-              suffixIcon: Padding(
-                padding: const EdgeInsetsDirectional.only(end: 4),
+              Positioned(
+                right: 6,
+                bottom: 4,
                 child: isBusy
-                    ? IconButton.filled(
+                    ? IconButton(
                         onPressed: onStop,
                         tooltip: l10n.stop,
                         icon: const Icon(Icons.stop),
+                        style: IconButton.styleFrom(
+                          backgroundColor: scheme.error,
+                          foregroundColor: scheme.onError,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints.tightFor(
+                            width: 40,
+                            height: 40,
+                          ),
+                        ),
                       )
-                    : IconButton.filled(
+                    : IconButton(
                         onPressed: onSend,
                         tooltip: l10n.send,
                         icon: const Icon(Icons.arrow_upward),
+                        style: IconButton.styleFrom(
+                          backgroundColor: scheme.primary,
+                          foregroundColor: scheme.onPrimary,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints.tightFor(
+                            width: 40,
+                            height: 40,
+                          ),
+                        ),
                       ),
               ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(28),
-                borderSide: BorderSide.none,
-              ),
-            ),
+            ],
           ),
         ],
       ),

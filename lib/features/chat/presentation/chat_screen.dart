@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/errors/error_localizer.dart';
+import '../../../core/storage/token_estimator.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../home/chat_drawer.dart';
 import '../../settings/app_settings.dart';
@@ -12,6 +13,7 @@ import '../state/chat_session.dart';
 import '../state/current_chat.dart';
 import 'widgets/chat_composer.dart';
 import 'widgets/context_bar.dart';
+import 'widgets/context_circle.dart';
 import 'widgets/menu_glyph.dart';
 import 'widgets/message_bubble.dart';
 
@@ -217,11 +219,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ? chatPrompt
         : settings.systemPrompt;
 
+    final usage = computeContextUsage(settings, messages, systemPrompt);
     final reversed = messages.reversed.toList();
 
     return Column(
       children: <Widget>[
-        ContextBar(messages: messages, systemPrompt: systemPrompt),
+        ContextBar(
+          used: usage.used,
+          limit: usage.limit,
+          approximate: usage.approximate,
+        ),
         Expanded(
           child: messages.isEmpty
               ? Center(
@@ -263,6 +270,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
         ),
         _buildBranchStrip(chat, branches),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 2, 12, 0),
+          child: Row(
+            children: <Widget>[
+              const Spacer(),
+              ContextCircle(
+                used: usage.used,
+                limit: usage.limit,
+                onTap: () =>
+                    _showContextStats(l10n, chat, usage.used, usage.limit),
+              ),
+            ],
+          ),
+        ),
         ChatComposer(
           isBusy: session.isStreaming || session.busy,
           onStop: () => ref.read(chatSessionProvider.notifier).stop(),
@@ -274,6 +295,54 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ),
         ),
       ],
+    );
+  }
+
+  void _showContextStats(
+    AppLocalizations l10n,
+    Chat chat,
+    int used,
+    int limit,
+  ) {
+    final free = limit > used ? limit - used : 0;
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        final dl = AppLocalizations.of(dialogContext);
+        return AlertDialog(
+          title: Text(dl.contextDetails),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              _statRow(dl.statUsed, formatTokenCount(used)),
+              _statRow(dl.statFree, formatTokenCount(free)),
+              const Divider(height: 16),
+              _statRow(dl.statInput, formatTokenCount(chat.usageInput)),
+              _statRow(dl.statOutput, formatTokenCount(chat.usageOutput)),
+              _statRow(dl.statThinking, formatTokenCount(chat.usageThinking)),
+            ],
+          ),
+          actions: <Widget>[
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(dl.cancel),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _statRow(String label, String value) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: <Widget>[
+          Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
+          Text(value, style: theme.textTheme.titleSmall),
+        ],
+      ),
     );
   }
 

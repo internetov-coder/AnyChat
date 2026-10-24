@@ -25,6 +25,8 @@ class OpenAIAdapter extends ProviderAdapter {
         if (params.topP != null) 'top_p': params.topP,
         if (params.frequencyPenalty != null)
           'frequency_penalty': params.frequencyPenalty,
+        if (params.reasoningEffort != null)
+          'reasoning_effort': params.reasoningEffort,
         if (params.maxTokens != null) 'max_tokens': params.maxTokens,
       },
     );
@@ -187,6 +189,20 @@ class OpenAIAdapter extends ProviderAdapter {
         body: text,
         format: ApiFormat.openai,
       );
+    }
+    final usage = decoded['usage'];
+    if (usage is Map) {
+      final target = lastUsage ??= ChatUsage();
+      if (usage['prompt_tokens'] is num) {
+        target.inputTokens = (usage['prompt_tokens'] as num).toInt();
+      }
+      if (usage['completion_tokens'] is num) {
+        target.outputTokens = (usage['completion_tokens'] as num).toInt();
+      }
+      final details = usage['completion_tokens_details'];
+      if (details is Map && details['reasoning_tokens'] is num) {
+        target.thinkingTokens = (details['reasoning_tokens'] as num).toInt();
+      }
     }
     final choices = decoded['choices'];
     if (choices is List && choices.isNotEmpty) {

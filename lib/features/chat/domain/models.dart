@@ -15,6 +15,9 @@ class Chat {
     this.systemPrompt,
     this.activeBranchId,
     required this.createdAt,
+    this.usageInput = 0,
+    this.usageOutput = 0,
+    this.usageThinking = 0,
   });
 
   final int id;
@@ -23,12 +26,20 @@ class Chat {
   final int? activeBranchId;
   final DateTime createdAt;
 
+  /// Cumulative usage over the whole chat (reported or estimated).
+  final int usageInput;
+  final int usageOutput;
+  final int usageThinking;
+
   factory Chat.fromRow(db.Chat row) => Chat(
         id: row.id,
         title: row.title,
         systemPrompt: row.systemPrompt,
         activeBranchId: row.activeBranchId,
         createdAt: row.createdAt,
+        usageInput: row.usageInput,
+        usageOutput: row.usageOutput,
+        usageThinking: row.usageThinking,
       );
 }
 

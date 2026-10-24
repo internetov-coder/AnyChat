@@ -57,6 +57,25 @@ Set<ModelModality> mediaModalitiesFor(
   return out;
 }
 
+/// Heuristic: does this model id look like a reasoning/thinking model?
+bool isReasoningModel(String modelId) {
+  final id = modelId.toLowerCase();
+  const markers = <String>[
+    'o1-',
+    'o3-',
+    'o4-',
+    '/o1',
+    '/o3',
+    '/o4',
+    'gpt-5',
+    'reasoner',
+    'thinking',
+    '-r1',
+    'qwq',
+  ];
+  return markers.any(id.contains);
+}
+
 /// A model as shown on the Models screen.
 class ModelInfo {
   const ModelInfo({

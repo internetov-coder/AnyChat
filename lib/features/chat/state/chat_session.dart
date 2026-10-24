@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../app_providers.dart';
 import '../../../core/errors/api_error.dart';
+import '../../../core/storage/token_estimator.dart';
 import '../../../core/errors/debug_log.dart';
 import '../../../features/providers/data/provider_adapter.dart';
 import '../../../features/providers/domain/provider_registry.dart';
@@ -236,6 +237,9 @@ class ChatSession extends _$ChatSession {
         topP: session.settings.topP,
         frequencyPenalty: session.settings.frequencyPenalty,
         topK: session.settings.topK,
+        reasoningEffort: session.settings.reasoningEffort.isEmpty
+            ? null
+            : session.settings.reasoningEffort,
         maxTokens: session.settings.maxTokens,
         timeout: Duration(seconds: session.settings.timeoutSeconds),
       );
@@ -384,6 +388,9 @@ class ChatSession extends _$ChatSession {
       topP: session.settings.topP,
       frequencyPenalty: session.settings.frequencyPenalty,
       topK: session.settings.topK,
+      reasoningEffort: session.settings.reasoningEffort.isEmpty
+          ? null
+          : session.settings.reasoningEffort,
       maxTokens: session.settings.maxTokens,
       timeout: Duration(seconds: session.settings.timeoutSeconds),
     );
@@ -423,6 +430,37 @@ class ChatSession extends _$ChatSession {
       await _recordFailure(repo, assistantId, buffer.toString(), error);
     } finally {
       _token = null;
+      await _recordUsage(session, turns, buffer.toString());
+    }
+  }
+
+  /// Adds this request's usage to the chat totals: provider-reported when
+  /// available, heuristic estimate otherwise. Never breaks the chat.
+  Future<void> _recordUsage(
+    _Session session,
+    List<ChatTurn> sent,
+    String reply,
+  ) async {
+    try {
+      final chatRepo = ref.read(chatRepositoryProvider);
+      final chat = await chatRepo.getChat(session.chat.id);
+      if (chat == null) return;
+      final usage = session.adapter.lastUsage;
+      final input = usage?.inputTokens ??
+          estimateConversationTokens(
+            <String>[for (final turn in sent) turn.content],
+          );
+      final output = usage?.outputTokens ??
+          estimateConversationTokens(<String>[reply]);
+      final thinking = usage?.thinkingTokens ?? 0;
+      await chatRepo.setUsage(
+        session.chat.id,
+        input: chat.usageInput + input,
+        output: chat.usageOutput + output,
+        thinking: chat.usageThinking + thinking,
+      );
+    } catch (_) {
+      // Usage accounting must never break a conversation.
     }
   }
 

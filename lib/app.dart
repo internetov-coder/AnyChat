@@ -2,6 +2,7 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/theme/accent_colors.dart';
 import 'features/home/main_shell.dart';
 import 'features/settings/app_settings.dart';
 import 'features/settings/state/settings_controller.dart';
@@ -40,12 +41,14 @@ class AnyChatApp extends ConsumerWidget {
     Color? lightSeed,
     Color? darkSeed,
   ) {
+    // An explicit accent always wins over dynamic color.
+    final accentSeed = kAccentColors[settings.accentColor];
     final lightScheme = ColorScheme.fromSeed(
-      seedColor: lightSeed ?? _seed,
+      seedColor: accentSeed ?? lightSeed ?? _seed,
       brightness: Brightness.light,
     );
     final darkScheme = ColorScheme.fromSeed(
-      seedColor: darkSeed ?? _seed,
+      seedColor: accentSeed ?? darkSeed ?? _seed,
       brightness: Brightness.dark,
     );
     final localeCode = settings.localeCode;

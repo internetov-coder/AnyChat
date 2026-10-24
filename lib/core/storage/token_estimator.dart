@@ -21,6 +21,17 @@ int estimateTokens(String text) {
   return (latin + 3) ~/ 4 + (cyrillic + 1) ~/ 2 + other;
 }
 
+/// Compact token display: `847`, `12.4K`, `1.05M`.
+String formatTokenCount(int count) {
+  if (count >= 1000000) {
+    return '${(count / 1000000).toStringAsFixed(2)}M';
+  }
+  if (count >= 1000) {
+    return '${(count / 1000).toStringAsFixed(1)}K';
+  }
+  return '$count';
+}
+
 /// Estimated tokens for a whole conversation.
 ///
 /// Adds a small per-message overhead to account for the chat template

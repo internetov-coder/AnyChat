@@ -32,6 +32,18 @@ void main() {
     });
   });
 
+  group('formatTokenCount', () {
+    test('formats hundreds, thousands and millions', () {
+      expect(formatTokenCount(0), '0');
+      expect(formatTokenCount(847), '847');
+      expect(formatTokenCount(1000), '1.0K');
+      expect(formatTokenCount(12400), '12.4K');
+      expect(formatTokenCount(128000), '128.0K');
+      expect(formatTokenCount(1000000), '1.00M');
+      expect(formatTokenCount(1050000), '1.05M');
+    });
+  });
+
   group('estimateConversationTokens', () {
     test('sums messages plus per-message overhead', () {
       expect(

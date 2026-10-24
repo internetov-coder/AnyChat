@@ -185,6 +185,43 @@ void main() {
       expect(request.body.containsKey('top_k'), isFalse);
     });
 
+    test('serializes reasoning_effort when set', () {
+      final request = adapter.buildChatRequest(
+        ChatParams(
+          apiKey: 'k',
+          baseUrl: 'https://api.openai.com/v1',
+          model: 'o3-mini',
+          turns: const <ChatTurn>[
+            ChatTurn(role: 'user', content: 'think'),
+          ],
+          reasoningEffort: 'high',
+        ),
+      );
+      expect(request.body['reasoning_effort'], 'high');
+      final plain = adapter.buildChatRequest(
+        ChatParams(
+          apiKey: 'k',
+          baseUrl: 'https://api.openai.com/v1',
+          model: 'gpt-4o-mini',
+          turns: const <ChatTurn>[
+            ChatTurn(role: 'user', content: 'hi'),
+          ],
+        ),
+      );
+      expect(plain.body.containsKey('reasoning_effort'), isFalse);
+    });
+
+    test('captures usage and reasoning tokens from stream chunks', () {
+      final adapter = OpenAIAdapter();
+      adapter.parseStreamData(
+        '{"choices":[],"usage":{"prompt_tokens":120,"completion_tokens":45,'
+        '"completion_tokens_details":{"reasoning_tokens":12}}}',
+      );
+      expect(adapter.lastUsage?.inputTokens, 120);
+      expect(adapter.lastUsage?.outputTokens, 45);
+      expect(adapter.lastUsage?.thinkingTokens, 12);
+    });
+
     test('parses Vercel AI Gateway style pricing and context window', () {
       final models = adapter.parseModels(
         '{"data":[{"id":"google/gemini-2.5-flash","name":"Gemini 2.5 Flash",'
@@ -262,6 +299,18 @@ void main() {
       expect(models.single.id, 'claude-3-7-sonnet-latest');
       expect(models.single.name, 'Claude 3.7 Sonnet');
       expect(models.single.modalities, contains(ModelModality.image));
+    });
+
+    test('captures usage from anthropic stream events', () {
+      final adapter = AnthropicAdapter();
+      adapter.parseStreamData(
+        '{"type":"message_start","message":{"usage":{"input_tokens":200}}}',
+      );
+      adapter.parseStreamData(
+        '{"type":"message_delta","usage":{"output_tokens":64}}',
+      );
+      expect(adapter.lastUsage?.inputTokens, 200);
+      expect(adapter.lastUsage?.outputTokens, 64);
     });
 
     test('serializes top_p and clamps temperature to 0..1 for anthropic', () {
@@ -378,6 +427,17 @@ void main() {
       expect(config['topP'], 0.95);
       expect(config['topK'], 40);
       expect(config.containsKey('frequency_penalty'), isFalse);
+    });
+
+    test('captures usage and thoughts from gemini usageMetadata', () {
+      final adapter = GeminiAdapter();
+      adapter.parseStreamData(
+        '{"candidates":[],"usageMetadata":{"promptTokenCount":300,'
+        '"candidatesTokenCount":50,"thoughtsTokenCount":90}}',
+      );
+      expect(adapter.lastUsage?.inputTokens, 300);
+      expect(adapter.lastUsage?.outputTokens, 50);
+      expect(adapter.lastUsage?.thinkingTokens, 90);
     });
 
     test('builds gemini inlineData parts for attachments', () {

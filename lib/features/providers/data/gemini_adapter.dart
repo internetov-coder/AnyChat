@@ -149,6 +149,19 @@ class GeminiAdapter extends ProviderAdapter {
         raw: text,
       );
     }
+    final meta = decoded['usageMetadata'];
+    if (meta is Map) {
+      final target = lastUsage ??= ChatUsage();
+      if (meta['promptTokenCount'] is num) {
+        target.inputTokens = (meta['promptTokenCount'] as num).toInt();
+      }
+      if (meta['candidatesTokenCount'] is num) {
+        target.outputTokens = (meta['candidatesTokenCount'] as num).toInt();
+      }
+      if (meta['thoughtsTokenCount'] is num) {
+        target.thinkingTokens = (meta['thoughtsTokenCount'] as num).toInt();
+      }
+    }
     final candidates = decoded['candidates'];
     if (candidates is List && candidates.isNotEmpty) {
       final first = candidates[0];
