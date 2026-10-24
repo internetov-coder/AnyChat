@@ -3,10 +3,12 @@ import 'dart:typed_data';
 
 import 'package:anychat/core/errors/api_error.dart';
 import 'package:anychat/core/network/api_format.dart';
+import 'package:anychat/features/chat/domain/models.dart';
 import 'package:anychat/features/providers/data/anthropic_adapter.dart';
 import 'package:anychat/features/providers/data/gemini_adapter.dart';
 import 'package:anychat/features/providers/data/openai_adapter.dart';
 import 'package:anychat/features/providers/data/provider_adapter.dart';
+import 'package:anychat/features/providers/domain/model_info.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -108,6 +110,63 @@ void main() {
       expect(request.headers['Authorization'], 'Bearer sk-test-key');
     });
 
+    test('builds openai multimodal content parts for attachments', () {
+      final request = adapter.buildChatRequest(
+        ChatParams(
+          apiKey: 'k',
+          baseUrl: 'https://api.openai.com/v1',
+          model: 'gpt-4o',
+          turns: const <ChatTurn>[
+            ChatTurn(
+              role: 'user',
+              content: 'look at this',
+              attachments: <ChatAttachment>[
+                ChatAttachment(
+                  mimeType: 'image/png',
+                  name: 'a.png',
+                  data: 'QUJD',
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+      final messages = request.body['messages'] as List<dynamic>;
+      final user = messages.first as Map<String, dynamic>;
+      final content = user['content'] as List<dynamic>;
+      expect(content, hasLength(2));
+      expect(content[0],
+          <String, dynamic>{'type': 'text', 'text': 'look at this'});
+      final image = content[1] as Map<String, dynamic>;
+      expect(image['type'], 'image_url');
+      expect(
+        (image['image_url'] as Map<String, dynamic>)['url'],
+        'data:image/png;base64,QUJD',
+      );
+    });
+
+    test('parses input modalities from gateway catalogs', () {
+      final models = adapter.parseModels(
+        '{"data":['
+        '{"id":"openai/gpt-4o","modalities":{"input":["text","image"],"output":["text"]}},'
+        '{"id":"meta-llama/llama-3.3-70b-instruct","architecture":{"input_modalities":["text"]}},'
+        '{"id":"google/gemini-2.5-flash","modalities":{"input":["text","image"]}}]}',
+      );
+      expect(models, hasLength(3));
+      expect(models[0].modalities, contains(ModelModality.image));
+      expect(models[0].supportsAttachments, isTrue);
+      expect(models[1].modalities, isEmpty);
+      expect(models[1].supportsAttachments, isFalse);
+      expect(
+        models[2].modalities,
+        containsAll(<ModelModality>[
+          ModelModality.image,
+          ModelModality.video,
+          ModelModality.audio,
+        ]),
+      );
+    });
+
     test('parses Vercel AI Gateway style pricing and context window', () {
       final models = adapter.parseModels(
         '{"data":[{"id":"google/gemini-2.5-flash","name":"Gemini 2.5 Flash",'
@@ -184,6 +243,40 @@ void main() {
       );
       expect(models.single.id, 'claude-3-7-sonnet-latest');
       expect(models.single.name, 'Claude 3.7 Sonnet');
+      expect(models.single.modalities, contains(ModelModality.image));
+    });
+
+    test('builds anthropic base64 image parts', () {
+      final request = adapter.buildChatRequest(
+        ChatParams(
+          apiKey: 'k',
+          baseUrl: 'https://api.anthropic.com/v1',
+          model: 'claude-3-7-sonnet',
+          turns: const <ChatTurn>[
+            ChatTurn(
+              role: 'user',
+              content: 'see this',
+              attachments: <ChatAttachment>[
+                ChatAttachment(
+                  mimeType: 'image/jpeg',
+                  name: 'b.jpg',
+                  data: 'QUJD',
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+      final messages = request.body['messages'] as List<dynamic>;
+      final user = messages.first as Map<String, dynamic>;
+      final content = user['content'] as List<dynamic>;
+      expect(content, hasLength(2));
+      final image = content[1] as Map<String, dynamic>;
+      expect(image['type'], 'image');
+      final source = image['source'] as Map<String, dynamic>;
+      expect(source['type'], 'base64');
+      expect(source['media_type'], 'image/jpeg');
+      expect(source['data'], 'QUJD');
     });
   });
 
@@ -228,6 +321,39 @@ void main() {
         baseUrl: baseUrl,
       );
       expect(request.url, '$baseUrl/models?key=AIza-Test_Key');
+    });
+
+    test('builds gemini inlineData parts for attachments', () {
+      final request = adapter.buildChatRequest(
+        ChatParams(
+          apiKey: 'AIza-Test_Key',
+          baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+          model: 'gemini-2.5-flash',
+          turns: const <ChatTurn>[
+            ChatTurn(
+              role: 'user',
+              content: 'watch this',
+              attachments: <ChatAttachment>[
+                ChatAttachment(
+                  mimeType: 'video/mp4',
+                  name: 'v.mp4',
+                  data: 'AAAA',
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+      final contents = request.body['contents'] as List<dynamic>;
+      final parts =
+          (contents.first as Map<String, dynamic>)['parts'] as List<dynamic>;
+      expect(parts, hasLength(2));
+      expect(
+        parts[1],
+        <String, dynamic>{
+          'inlineData': <String, dynamic>{'mimeType': 'video/mp4', 'data': 'AAAA'},
+        },
+      );
     });
 
     test('parses models and drops non-generative ones', () {
@@ -409,6 +535,23 @@ void main() {
       expect(merged[0].content, 'a\n\nb');
       expect(merged[1].content, 'hi');
       expect(merged[2].role, 'assistant');
+    });
+
+    test('mergeTurns keeps attachments of media-only turns', () {
+      final merged = ProviderAdapter.mergeTurns(const <ChatTurn>[
+        ChatTurn(
+          role: 'user',
+          content: '',
+          attachments: <ChatAttachment>[
+            ChatAttachment(mimeType: 'image/png', name: 'a.png', data: 'QQ=='),
+          ],
+        ),
+        ChatTurn(role: 'user', content: 'hi'),
+      ]);
+      expect(merged, hasLength(1));
+      expect(merged.single.content, 'hi');
+      expect(merged.single.attachments, hasLength(1));
+      expect(merged.single.attachments.single.name, 'a.png');
     });
 
     test('systemPromptOf concatenates system turns', () {

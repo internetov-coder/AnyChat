@@ -1,3 +1,4 @@
+import '../../chat/domain/models.dart' as chat;
 import '../../../core/errors/api_error.dart';
 import '../../../core/network/api_format.dart';
 import '../domain/model_info.dart';
@@ -16,15 +17,65 @@ class OpenAIAdapter extends ProviderAdapter {
       headers: <String, String>{'Authorization': 'Bearer ${params.apiKey}'},
       body: <String, dynamic>{
         'model': params.model,
-        'messages': <Map<String, String>>[
-          for (final turn in turns)
-            <String, String>{'role': turn.role, 'content': turn.content},
+        'messages': <Map<String, dynamic>>[
+          for (final turn in turns) _messageFor(turn),
         ],
         'stream': true,
         if (params.temperature != null) 'temperature': params.temperature,
         if (params.maxTokens != null) 'max_tokens': params.maxTokens,
       },
     );
+  }
+
+  /// Text-only turns keep a plain string body; turns with attachments use a
+  /// content part array (OpenAI multimodal format).
+  static Map<String, dynamic> _messageFor(ChatTurn turn) {
+    if (turn.attachments.isEmpty) {
+      return <String, String>{'role': turn.role, 'content': turn.content};
+    }
+    final content = <Map<String, dynamic>>[];
+    if (turn.content.isNotEmpty) {
+      content.add(<String, dynamic>{'type': 'text', 'text': turn.content});
+    }
+    for (final attachment in turn.attachments) {
+      content.add(_mediaPart(attachment));
+    }
+    return <String, dynamic>{'role': turn.role, 'content': content};
+  }
+
+  static Map<String, dynamic> _mediaPart(chat.ChatAttachment attachment) {
+    final mime = attachment.mimeType.toLowerCase();
+    if (mime.startsWith('image/')) {
+      return <String, dynamic>{
+        'type': 'image_url',
+        'image_url': <String, dynamic>{
+          'url': 'data:$mime;base64,${attachment.data}',
+        },
+      };
+    }
+    if (mime.startsWith('audio/')) {
+      final format =
+          mime == 'audio/wav' || mime == 'audio/x-wav' ? 'wav' : 'mp3';
+      return <String, dynamic>{
+        'type': 'input_audio',
+        'input_audio': <String, dynamic>{
+          'data': attachment.data,
+          'format': format,
+        },
+      };
+    }
+    if (mime.startsWith('video/')) {
+      return <String, dynamic>{
+        'type': 'video_url',
+        'video_url': <String, dynamic>{
+          'url': 'data:$mime;base64,${attachment.data}',
+        },
+      };
+    }
+    return <String, dynamic>{
+      'type': 'text',
+      'text': '[attachment: ${attachment.name}]',
+    };
   }
 
   @override
@@ -56,6 +107,7 @@ class OpenAIAdapter extends ProviderAdapter {
       if (rawName is String && rawName.trim().isNotEmpty) {
         name = rawName.trim();
       }
+      final declared = _declaredModalities(item);
       int? contextWindow;
       final rawContext = item['context_length'] ?? item['context_window'];
       if (rawContext is num) contextWindow = rawContext.toInt();
@@ -75,9 +127,44 @@ class OpenAIAdapter extends ProviderAdapter {
         approximateContext: contextWindow == null,
         inputPricePerM: inputPrice,
         outputPricePerM: outputPrice,
+        modalities: mediaModalitiesFor(id, declared: declared),
       ));
     }
     return result;
+  }
+
+  /// Reads input modalities from the catalog payloads we know about:
+  /// Vercel AI Gateway (`modalities.input`) and OpenRouter
+  /// (`architecture.input_modalities`).
+  static Set<ModelModality> _declaredModalities(Map item) {
+    final out = <ModelModality>{};
+    void addAll(Object? values) {
+      if (values is! Iterable) return;
+      for (final value in values) {
+        switch ('$value'.toLowerCase()) {
+          case 'image':
+            out.add(ModelModality.image);
+          case 'video':
+            out.add(ModelModality.video);
+          case 'audio':
+            out.add(ModelModality.audio);
+          default:
+            break;
+        }
+      }
+    }
+
+    final modalities = item['modalities'];
+    if (modalities is Map) {
+      addAll(modalities['input']);
+    } else if (modalities is Iterable) {
+      addAll(modalities);
+    }
+    final architecture = item['architecture'];
+    if (architecture is Map) {
+      addAll(architecture['input_modalities']);
+    }
+    return out;
   }
 
   @override

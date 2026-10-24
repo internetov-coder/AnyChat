@@ -17,9 +17,7 @@ class GeminiAdapter extends ProviderAdapter {
       if (turn.role == 'system') continue;
       contents.add(<String, dynamic>{
         'role': turn.role == 'assistant' ? 'model' : 'user',
-        'parts': <Map<String, String>>[
-          <String, String>{'text': turn.content},
-        ],
+        'parts': _partsFor(turn),
       });
     }
     final resource = params.model.startsWith('models/')
@@ -48,6 +46,26 @@ class GeminiAdapter extends ProviderAdapter {
           },
       },
     );
+  }
+
+  /// Gemini takes any media as `inlineData` parts alongside the text.
+  static List<Map<String, dynamic>> _partsFor(ChatTurn turn) {
+    final parts = <Map<String, dynamic>>[];
+    if (turn.content.isNotEmpty) {
+      parts.add(<String, dynamic>{'text': turn.content});
+    }
+    for (final attachment in turn.attachments) {
+      parts.add(<String, dynamic>{
+        'inlineData': <String, dynamic>{
+          'mimeType': attachment.mimeType,
+          'data': attachment.data,
+        },
+      });
+    }
+    if (parts.isEmpty) {
+      parts.add(<String, dynamic>{'text': turn.content});
+    }
+    return parts;
   }
 
   @override
@@ -96,6 +114,7 @@ class GeminiAdapter extends ProviderAdapter {
         name: displayName,
         contextWindow: contextWindow,
         approximateContext: contextWindow == null,
+        modalities: mediaModalitiesFor(id),
       ));
     }
     return result;

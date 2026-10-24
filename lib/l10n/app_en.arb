@@ -153,5 +153,9 @@
     }
   },
   "errNoModel": "Select a model first.",
-  "errNoChat": "Chat not found. It may have been deleted."
+  "errNoChat": "Chat not found. It may have been deleted.",
+  "attach": "Attach file",
+  "removeAttachment": "Remove attachment",
+  "attachmentTooBig": "File is too large (max 20 MB).",
+  "unsupportedForModel": "The selected model doesn't support attachments."
 }

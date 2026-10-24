@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../providers/domain/model_info.dart';
 import '../app_settings.dart';
 
 part 'settings_controller.g.dart';
@@ -60,6 +61,7 @@ class SettingsController extends _$SettingsController {
     bool contextApproximate = true,
     double? inputPricePerM,
     double? outputPricePerM,
+    Set<ModelModality> modalities = const <ModelModality>{},
   }) {
     return _update(
       (s) => s.copyWith(
@@ -69,6 +71,7 @@ class SettingsController extends _$SettingsController {
         modelContextApproximate: contextApproximate,
         modelInputPricePerM: inputPricePerM,
         modelOutputPricePerM: outputPricePerM,
+        modelModalities: modalities,
       ),
     );
   }

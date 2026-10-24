@@ -1,4 +1,5 @@
 import 'package:anychat/core/network/api_format.dart';
+import 'package:anychat/features/providers/domain/model_info.dart';
 import 'package:anychat/features/providers/domain/provider_registry.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -32,6 +33,50 @@ void main() {
           'openai/gpt-4.1-mini',
           'google/gemini-2.5-flash',
         ]),
+      );
+    });
+
+    test('text-only models get no media modalities', () {
+      expect(inferMediaModalities('deepseek-chat'), isEmpty);
+      expect(inferMediaModalities('meta-llama/llama-3.3-70b-instruct'), isEmpty);
+    });
+
+    test('vision and gemini models get media modalities', () {
+      expect(
+        inferMediaModalities('gpt-4o-mini'),
+        contains(ModelModality.image),
+      );
+      expect(
+        inferMediaModalities('gpt-4o-mini'),
+        isNot(contains(ModelModality.video)),
+      );
+      expect(
+        inferMediaModalities('google/gemini-2.5-flash'),
+        containsAll(<ModelModality>[
+          ModelModality.image,
+          ModelModality.video,
+          ModelModality.audio,
+        ]),
+      );
+      expect(
+        inferMediaModalities('claude-sonnet-4-20250514'),
+        contains(ModelModality.image),
+      );
+    });
+
+    test('declared catalog capabilities are unioned with inference', () {
+      final merged = mediaModalitiesFor(
+        'some-plain-model',
+        declared: <ModelModality>{ModelModality.image},
+      );
+      expect(merged, contains(ModelModality.image));
+      expect(inferMediaModalities('some-plain-model'), isEmpty);
+    });
+
+    test('ollama fallback models are text-only', () {
+      expect(
+        findProvider('ollama').fallbackModels.first.modalities,
+        isEmpty,
       );
     });
 

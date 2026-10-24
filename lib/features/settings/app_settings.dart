@@ -1,5 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../providers/domain/model_info.dart';
+
 /// Global app settings (generation params, UI preferences, selected model).
 ///
 /// Persisted with `shared_preferences`; API keys are *not* part of this class.
@@ -17,6 +19,7 @@ class AppSettings {
     this.modelContextApproximate = true,
     this.modelInputPricePerM,
     this.modelOutputPricePerM,
+    this.modelModalities = const <ModelModality>{},
   });
 
   static const Object _unspecified = Object();
@@ -34,6 +37,9 @@ class AppSettings {
   final double? modelInputPricePerM;
   final double? modelOutputPricePerM;
 
+  /// Media inputs the selected model supports (drives the attach button).
+  final Set<ModelModality> modelModalities;
+
   factory AppSettings.fromPrefs(SharedPreferences prefs) {
     return AppSettings(
       themeMode: prefs.getString('theme_mode') ?? 'system',
@@ -48,7 +54,19 @@ class AppSettings {
       modelContextApproximate: prefs.getBool('model_context_approx') ?? true,
       modelInputPricePerM: prefs.getDouble('model_input_price'),
       modelOutputPricePerM: prefs.getDouble('model_output_price'),
+      modelModalities: _parseModalities(prefs.getString('model_modalities')),
     );
+  }
+
+  static Set<ModelModality> _parseModalities(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return const <ModelModality>{};
+    final out = <ModelModality>{};
+    for (final token in raw.split(' ')) {
+      for (final modality in ModelModality.values) {
+        if (modality.name == token) out.add(modality);
+      }
+    }
+    return out;
   }
 
   AppSettings copyWith({
@@ -64,6 +82,7 @@ class AppSettings {
     Object? modelContextApproximate = _unspecified,
     Object? modelInputPricePerM = _unspecified,
     Object? modelOutputPricePerM = _unspecified,
+    Set<ModelModality>? modelModalities,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -90,6 +109,7 @@ class AppSettings {
       modelOutputPricePerM: identical(modelOutputPricePerM, _unspecified)
           ? this.modelOutputPricePerM
           : modelOutputPricePerM as double?,
+      modelModalities: modelModalities ?? this.modelModalities,
     );
   }
 
@@ -101,6 +121,7 @@ class AppSettings {
       modelContextApproximate: true,
       modelInputPricePerM: null,
       modelOutputPricePerM: null,
+      modelModalities: const <ModelModality>{},
     );
   }
 
@@ -117,6 +138,13 @@ class AppSettings {
     await prefs.setBool('model_context_approx', modelContextApproximate);
     await _setOrNull(prefs, 'model_input_price', modelInputPricePerM);
     await _setOrNull(prefs, 'model_output_price', modelOutputPricePerM);
+    await _setOrNull(
+      prefs,
+      'model_modalities',
+      modelModalities.isEmpty
+          ? null
+          : modelModalities.map((m) => m.name).join(' '),
+    );
   }
 
   Future<void> _setOrNull(SharedPreferences prefs, String key, Object? value) {

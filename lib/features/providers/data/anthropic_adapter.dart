@@ -28,9 +28,8 @@ class AnthropicAdapter extends ProviderAdapter {
       'model': params.model,
       'max_tokens': params.maxTokens ?? 4096,
       'stream': true,
-      'messages': <Map<String, String>>[
-        for (final turn in messages)
-          <String, String>{'role': turn.role, 'content': turn.content},
+      'messages': <Map<String, dynamic>>[
+        for (final turn in messages) _messageFor(turn),
       ],
     };
     if (system != null) {
@@ -48,6 +47,33 @@ class AnthropicAdapter extends ProviderAdapter {
       },
       body: body,
     );
+  }
+
+  /// Anthropic accepts images as base64 content parts; text-only turns keep
+  /// the plain string form.
+  static Map<String, dynamic> _messageFor(ChatTurn turn) {
+    if (turn.attachments.isEmpty) {
+      return <String, String>{'role': turn.role, 'content': turn.content};
+    }
+    final content = <Map<String, dynamic>>[];
+    if (turn.content.isNotEmpty) {
+      content.add(<String, dynamic>{'type': 'text', 'text': turn.content});
+    }
+    for (final attachment in turn.attachments) {
+      if (!attachment.isImage) continue; // images (and PDFs) only
+      content.add(<String, dynamic>{
+        'type': 'image',
+        'source': <String, dynamic>{
+          'type': 'base64',
+          'media_type': attachment.mimeType,
+          'data': attachment.data,
+        },
+      });
+    }
+    if (content.isEmpty) {
+      content.add(<String, dynamic>{'type': 'text', 'text': turn.content});
+    }
+    return <String, dynamic>{'role': turn.role, 'content': content};
   }
 
   @override
@@ -82,7 +108,12 @@ class AnthropicAdapter extends ProviderAdapter {
         name = rawName.trim();
       }
       result.add(
-        ModelInfo(id: id, name: name, approximateContext: true),
+        ModelInfo(
+          id: id,
+          name: name,
+          approximateContext: true,
+          modalities: mediaModalitiesFor(id),
+        ),
       );
     }
     return result;

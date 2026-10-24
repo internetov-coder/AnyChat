@@ -4,6 +4,7 @@ import '../../../../core/errors/api_error.dart';
 import '../../../../core/errors/error_localizer.dart';
 import '../../domain/models.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'attachment_view.dart';
 
 /// A single chat bubble: user messages use `primaryContainer`, assistant
 /// messages `surfaceContainerHigh` (Material 3).
@@ -64,6 +65,18 @@ class MessageBubble extends StatelessWidget {
           crossAxisAlignment:
               isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: <Widget>[
+            if (message.attachments.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: <Widget>[
+                    for (final attachment in message.attachments)
+                      AttachmentPreview(attachment: attachment),
+                  ],
+                ),
+              ),
             if (isStreaming)
               text.isEmpty
                   ? Text(l10n.generating, style: generatingStyle)

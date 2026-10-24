@@ -83,9 +83,17 @@ class ChatSession extends _$ChatSession {
 
   // ---------------------------------------------------------------- public
 
-  Future<void> send(int chatId, String text) async {
+  Future<void> send(
+    int chatId,
+    String text, {
+    List<ChatAttachment> attachments = const <ChatAttachment>[],
+  }) async {
     final trimmed = text.trim();
-    if (trimmed.isEmpty || state.isStreaming || state.busy) return;
+    if ((trimmed.isEmpty && attachments.isEmpty) ||
+        state.isStreaming ||
+        state.busy) {
+      return;
+    }
     state = const ChatSessionState();
 
     final session = await _openSession(chatId);
@@ -99,6 +107,7 @@ class ChatSession extends _$ChatSession {
       branchId: session.branchId,
       role: 'user',
       content: trimmed,
+      attachments: Message.encodeAttachments(attachments),
     );
     if (isFirstUserMessage) {
       await ref
@@ -215,7 +224,7 @@ class ChatSession extends _$ChatSession {
     _token = token;
     try {
       final turns = <ChatTurn>[
-        ..._historyTurns(session, history),
+        ..._historyTurns(session, history, withAttachments: false),
         ChatTurn(role: 'user', content: trimmedPrompt),
       ];
       final params = ChatParams(
@@ -316,14 +325,25 @@ class ChatSession extends _$ChatSession {
     return trimmed.isEmpty ? null : ChatTurn(role: 'system', content: trimmed);
   }
 
-  List<ChatTurn> _historyTurns(_Session session, List<Message> history) {
+  List<ChatTurn> _historyTurns(
+    _Session session,
+    List<Message> history, {
+    bool withAttachments = true,
+  }) {
     final system = _systemTurnFor(session);
     return <ChatTurn>[
       ?system,
       for (final message in history)
         if ((message.role == 'user' || message.role == 'assistant') &&
-            message.content.trim().isNotEmpty)
-          ChatTurn(role: message.role, content: message.content),
+            (message.content.trim().isNotEmpty ||
+                message.attachments.isNotEmpty))
+          ChatTurn(
+            role: message.role,
+            content: message.content,
+            attachments: withAttachments
+                ? message.attachments
+                : const <ChatAttachment>[],
+          ),
     ];
   }
 

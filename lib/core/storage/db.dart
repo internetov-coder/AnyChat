@@ -27,6 +27,10 @@ class Messages extends Table {
   IntColumn get parentId => integer().nullable()();
   TextColumn get role => text()();
   TextColumn get content => text().withDefault(const Constant(''))();
+
+  /// JSON array of {@link ChatAttachment} objects (base64 payloads) —
+  /// added in schema v2 for multimodal input.
+  TextColumn get attachments => text().nullable()();
   TextColumn get model => text().nullable()();
   TextColumn get errorType => text().nullable()();
   TextColumn get errorDetails => text().nullable()();
@@ -46,10 +50,15 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(driftDatabase(name: 'anychat'));
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) async => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.addColumn(messages, messages.attachments);
+          }
+        },
       );
 }

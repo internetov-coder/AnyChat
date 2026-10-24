@@ -168,6 +168,7 @@ class ChatRepository {
                 model: Value(message.model),
                 errorType: Value(message.errorType),
                 errorDetails: Value(message.errorDetails),
+                attachments: Value(message.attachments),
                 createdAt: Value(message.createdAt),
               ),
             );

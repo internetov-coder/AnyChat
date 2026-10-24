@@ -1,5 +1,7 @@
 import '../../../core/storage/db.dart' as db;
 
+import 'dart:convert';
+
 /// Domain models for the chat feature.
 ///
 /// Deliberately hand-written instead of reusing the drift row classes:
@@ -30,6 +32,56 @@ class Chat {
       );
 }
 
+/// One file attachment carried by a message (photos, video, audio).
+class ChatAttachment {
+  const ChatAttachment({
+    required this.mimeType,
+    required this.name,
+    required this.data,
+  });
+
+  /// e.g. `image/png`, `video/mp4`, `audio/mpeg`.
+  final String mimeType;
+
+  /// Original file name, shown in chips and bubbles.
+  final String name;
+
+  /// Base64 payload.
+  final String data;
+
+  factory ChatAttachment.fromBytes({
+    required String mimeType,
+    required String name,
+    required List<int> bytes,
+  }) =>
+      ChatAttachment(
+        mimeType: mimeType,
+        name: name,
+        data: base64Encode(bytes),
+      );
+
+  factory ChatAttachment.fromJson(Map<String, dynamic> json) =>
+      ChatAttachment(
+        mimeType: json['mime'] is String
+            ? json['mime'] as String
+            : 'application/octet-stream',
+        name: json['name'] is String ? json['name'] as String : 'file',
+        data: json['data'] is String ? json['data'] as String : '',
+      );
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'mime': mimeType,
+        'name': name,
+        'data': data,
+      };
+
+  String get kind => mimeType.split('/').first;
+
+  bool get isImage => kind == 'image';
+  bool get isVideo => kind == 'video';
+  bool get isAudio => kind == 'audio';
+}
+
 class Message {
   const Message({
     required this.id,
@@ -41,6 +93,7 @@ class Message {
     this.model,
     this.errorType,
     this.errorDetails,
+    this.attachments = const <ChatAttachment>[],
     required this.createdAt,
   });
 
@@ -57,6 +110,10 @@ class Message {
   /// [ApiErrorType.name] of the last failure, if the reply failed.
   final String? errorType;
   final String? errorDetails;
+
+  /// Media attached to a user message (empty for text-only messages).
+  final List<ChatAttachment> attachments;
+
   final DateTime createdAt;
 
   factory Message.fromRow(db.Message row) => Message(
@@ -69,8 +126,34 @@ class Message {
         model: row.model,
         errorType: row.errorType,
         errorDetails: row.errorDetails,
+        attachments: parseAttachments(row.attachments),
         createdAt: row.createdAt,
       );
+
+  /// Lenient JSON parse: malformed payloads yield no attachments.
+  static List<ChatAttachment> parseAttachments(String? raw) {
+    if (raw == null || raw.isEmpty) return const <ChatAttachment>[];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is List) {
+        return <ChatAttachment>[
+          for (final item in decoded)
+            if (item is Map<String, dynamic>) ChatAttachment.fromJson(item),
+        ];
+      }
+    } on FormatException {
+      return const <ChatAttachment>[];
+    }
+    return const <ChatAttachment>[];
+  }
+
+  /// Serializes [attachments] for the storage layer.
+  static String? encodeAttachments(List<ChatAttachment> attachments) {
+    if (attachments.isEmpty) return null;
+    return jsonEncode(
+      <Map<String, dynamic>>[for (final a in attachments) a.toJson()],
+    );
+  }
 }
 
 class Branch {

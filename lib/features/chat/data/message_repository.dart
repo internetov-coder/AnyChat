@@ -33,6 +33,7 @@ class MessageRepository {
     String content = '',
     String? model,
     int? parentId,
+    String? attachments,
   }) {
     return _db.into(_db.messages).insert(
           MessagesCompanion.insert(
@@ -42,6 +43,7 @@ class MessageRepository {
             role: role,
             content: Value(content),
             model: Value(model),
+            attachments: Value(attachments),
           ),
         );
   }

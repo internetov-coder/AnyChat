@@ -7,6 +7,7 @@ import '../../../core/errors/api_error.dart';
 import '../../../core/network/api_format.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/network/sse_parser.dart';
+import '../../chat/domain/models.dart' as chat;
 import '../domain/model_info.dart';
 import 'anthropic_adapter.dart';
 import 'gemini_adapter.dart';
@@ -14,11 +15,18 @@ import 'openai_adapter.dart';
 
 /// One conversation turn as understood by every wire format.
 class ChatTurn {
-  const ChatTurn({required this.role, required this.content});
+  const ChatTurn({
+    required this.role,
+    required this.content,
+    this.attachments = const <chat.ChatAttachment>[],
+  });
 
   /// `system`, `user` or `assistant`.
   final String role;
   final String content;
+
+  /// Media attached to this turn (multimodal input).
+  final List<chat.ChatAttachment> attachments;
 }
 
 /// A fully materialized HTTP request (URL + headers + JSON body).
@@ -233,18 +241,28 @@ abstract class ProviderAdapter {
   static List<ChatTurn> mergeTurns(List<ChatTurn> turns) {
     final merged = <ChatTurn>[];
     for (final turn in turns) {
-      if (turn.content.trim().isEmpty) continue;
+      if (turn.content.trim().isEmpty && turn.attachments.isEmpty) continue;
       if (merged.isNotEmpty && merged.last.role == turn.role) {
         final previous = merged.removeLast();
         merged.add(ChatTurn(
           role: turn.role,
-          content: '${previous.content}\n\n${turn.content}',
+          content: _joinText(previous.content, turn.content),
+          attachments: <chat.ChatAttachment>[
+            ...previous.attachments,
+            ...turn.attachments,
+          ],
         ));
       } else {
         merged.add(turn);
       }
     }
     return merged;
+  }
+
+  static String _joinText(String first, String second) {
+    if (first.trim().isEmpty) return second;
+    if (second.trim().isEmpty) return first;
+    return '$first\n\n$second';
   }
 
   /// Joins system turns into a single system prompt, or `null`.

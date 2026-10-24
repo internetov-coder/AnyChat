@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,6 +8,8 @@ import '../../../app_providers.dart';
 import '../../../core/errors/error_localizer.dart';
 import '../domain/models.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../providers/domain/model_info.dart';
+import '../../providers/domain/provider_registry.dart';
 import '../../home/chat_drawer.dart';
 import '../../settings/app_settings.dart';
 import '../../settings/state/settings_controller.dart';
@@ -27,8 +32,13 @@ class ChatScreen extends ConsumerStatefulWidget {
 }
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
+  static const int _maxAttachmentBytes = 20 * 1024 * 1024;
+
   final TextEditingController _input = TextEditingController();
   final FocusNode _focus = FocusNode();
+
+  /// Files staged for the next message (cleared on send).
+  final List<ChatAttachment> _pending = <ChatAttachment>[];
 
   @override
   void dispose() {
@@ -37,11 +47,141 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     super.dispose();
   }
 
+  Set<ModelModality> _supportedFor(AppSettings settings) {
+    final provider = findProvider(settings.selectedProviderId);
+    final modelId = settings.selectedModelId ?? provider.defaultModel;
+    return mediaModalitiesFor(modelId, declared: settings.modelModalities);
+  }
+
+  Set<ModelModality> _supportedNow() {
+    final settings = ref.read(settingsControllerProvider).when(
+          data: (AppSettings value) => value,
+          loading: () => const AppSettings(),
+          error: (Object error, StackTrace stack) => const AppSettings(),
+        );
+    return _supportedFor(settings);
+  }
+
+  static String? _mimeForExtension(String extension) {
+    switch (extension) {
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      case 'webp':
+        return 'image/webp';
+      case 'gif':
+        return 'image/gif';
+      case 'mp4':
+        return 'video/mp4';
+      case 'mov':
+        return 'video/quicktime';
+      case 'webm':
+        return 'video/webm';
+      case 'mp3':
+        return 'audio/mpeg';
+      case 'wav':
+        return 'audio/wav';
+      default:
+        return null;
+    }
+  }
+
+  void _snack(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  Future<void> _pickAttachment() async {
+    final l10n = AppLocalizations.of(context);
+    final supported = _supportedNow();
+    final extensions = <String>{};
+    if (supported.contains(ModelModality.image)) {
+      extensions.addAll(const <String>['jpg', 'jpeg', 'png', 'webp', 'gif']);
+    }
+    if (supported.contains(ModelModality.video)) {
+      extensions.addAll(const <String>['mp4', 'mov', 'webm']);
+    }
+    if (supported.contains(ModelModality.audio)) {
+      extensions.addAll(const <String>['mp3', 'wav']);
+    }
+    if (extensions.isEmpty) return;
+
+    List<PlatformFile> files;
+    try {
+      files = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: extensions.toList(),
+        dialogTitle: l10n.attach,
+      );
+    } catch (e) {
+      if (mounted) _snack(l10n.errUnknown('$e'));
+      return;
+    }
+    if (files.isEmpty) return;
+    final file = files.first;
+    final size = await file.length();
+    if (!mounted) return;
+    if (size == null || size > _maxAttachmentBytes) {
+      _snack(l10n.attachmentTooBig);
+      return;
+    }
+    Uint8List? bytes;
+    try {
+      bytes = await file.readAsBytes();
+    } catch (e) {
+      if (mounted) _snack(l10n.errUnknown('$e'));
+      return;
+    }
+    if (!mounted || bytes == null) return;
+    final mime = _mimeForExtension((file.extension ?? '').toLowerCase());
+    if (mime == null) return;
+    final kind = mime.split('/').first;
+    final ModelModality? modality = switch (kind) {
+      'image' => ModelModality.image,
+      'video' => ModelModality.video,
+      'audio' => ModelModality.audio,
+      _ => null,
+    };
+    if (modality == null || !supported.contains(modality)) {
+      _snack(l10n.unsupportedForModel);
+      return;
+    }
+    setState(() {
+      _pending.add(
+        ChatAttachment.fromBytes(
+          mimeType: mime,
+          name: file.name,
+          bytes: bytes,
+        ),
+      );
+    });
+  }
+
+  void _removePending(int index) {
+    setState(() {
+      if (index >= 0 && index < _pending.length) {
+        _pending.removeAt(index);
+      }
+    });
+  }
+
   Future<void> _send() async {
     final text = _input.text;
-    if (text.trim().isEmpty) return;
+    final attachments = List<ChatAttachment>.of(_pending);
+    if (text.trim().isEmpty && attachments.isEmpty) return;
     _input.clear();
-    await ref.read(chatSessionProvider.notifier).send(widget.chatId, text);
+    if (_pending.isNotEmpty) {
+      setState(_pending.clear);
+    }
+    await ref.read(chatSessionProvider.notifier).send(
+          widget.chatId,
+          text,
+          attachments: attachments,
+        );
     if (!mounted) return;
     _focus.requestFocus();
   }
@@ -355,6 +495,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           loading: () => const AppSettings(),
           error: (Object error, StackTrace stack) => const AppSettings(),
         );
+    final supportedModalities = _supportedFor(settings);
     final chatPrompt = chat.systemPrompt;
     final systemPrompt = (chatPrompt != null && chatPrompt.trim().isNotEmpty)
         ? chatPrompt
@@ -412,6 +553,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           isBusy: session.isStreaming || session.busy,
           onSend: _send,
           onStop: () => ref.read(chatSessionProvider.notifier).stop(),
+          attachments: _pending,
+          supportedModalities: supportedModalities,
+          onAttach: _pickAttachment,
+          onRemoveAttachment: _removePending,
         ),
       ],
     );

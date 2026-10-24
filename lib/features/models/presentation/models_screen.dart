@@ -136,6 +136,7 @@ class _ModelsScreenState extends ConsumerState<ModelsScreen> {
                       providerId: provider.id,
                       selected: model.id == selectedModelId,
                     ),
+
                 ],
               );
             },
@@ -170,6 +171,17 @@ class _ModelsScreenState extends ConsumerState<ModelsScreen> {
         ],
       ),
     );
+  }
+}
+
+IconData _modalityIcon(ModelModality modality) {
+  switch (modality) {
+    case ModelModality.image:
+      return Icons.image;
+    case ModelModality.video:
+      return Icons.videocam;
+    case ModelModality.audio:
+      return Icons.mic_none;
   }
 }
 
@@ -219,6 +231,21 @@ class _ModelTile extends ConsumerWidget {
               l10n.contextWindowLabel(contextWindow),
               style: Theme.of(context).textTheme.bodySmall,
             ),
+          if (model.modalities.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  for (final modality in ModelModality.values)
+                    if (model.modalities.contains(modality))
+                      Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: Icon(_modalityIcon(modality), size: 14),
+                      ),
+                ],
+              ),
+            ),
         ],
       ),
       isThreeLine: true,
@@ -231,6 +258,7 @@ class _ModelTile extends ConsumerWidget {
               contextApproximate: model.approximateContext,
               inputPricePerM: model.inputPricePerM,
               outputPricePerM: model.outputPricePerM,
+              modalities: model.modalities,
             );
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
