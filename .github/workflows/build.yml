@@ -53,7 +53,7 @@ jobs:
       - name: flutter gen-l10n
         run: flutter gen-l10n
 
-      - name: build_runner (pass 1: drift bootstrap)
+      - name: build_runner (pass 1 - drift bootstrap)
         # On a fresh checkout `db.g.dart` does not exist yet, so the riverpod
         # generator cannot resolve the generated row types (Chat/Message/...)
         # and fails on the first pass. Drift still writes its output here.
