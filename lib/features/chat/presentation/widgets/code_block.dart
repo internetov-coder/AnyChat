@@ -8,7 +8,7 @@ import 'package:markdown/markdown.dart' as md;
 /// (indented or nested fences the parser treats as plain code) - those
 /// stray fences are stripped here.
 class CodeBlockBuilder extends MarkdownElementBuilder {
-  const CodeBlockBuilder();
+  CodeBlockBuilder();
 
   @override
   bool isBlockElement() => true;
@@ -43,11 +43,14 @@ class CodeBlockBuilder extends MarkdownElementBuilder {
 
   static String _textOf(md.Node node) {
     if (node is md.Text) return node.text;
-    final buffer = StringBuffer();
-    for (final child in node.children ?? const <md.Node>[]) {
-      buffer.write(_textOf(child));
+    if (node is md.Element) {
+      final buffer = StringBuffer();
+      for (final child in node.children ?? const <md.Node>[]) {
+        buffer.write(_textOf(child));
+      }
+      return buffer.toString();
     }
-    return buffer.toString();
+    return '';
   }
 
   static String _stripStrayFences(String raw) {

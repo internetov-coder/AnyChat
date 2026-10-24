@@ -243,7 +243,7 @@ class _MessageBody extends StatelessWidget {
         data: data,
         onTapLink: (String text, String? href, String title) =>
             _openLink(context, href),
-        builders: const <String, MarkdownElementBuilder>{
+        builders: <String, MarkdownElementBuilder>{
           'pre': CodeBlockBuilder(),
         },
         styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
