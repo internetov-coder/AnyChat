@@ -182,5 +182,12 @@
   "statInput": "input",
   "statOutput": "output",
   "statThinking": "thinking",
-  "reasoningOff": "Not sent"
+  "reasoningOff": "Not sent",
+  "errNoProvider": "Add a provider first.",
+  "addProvider": "Add provider",
+  "providerNameLabel": "Provider name",
+  "endpointLabel": "Endpoint (Base URL)",
+  "deleteProvider": "Delete provider",
+  "editProvider": "Edit",
+  "noProvidersYet": "No providers yet. Tap + to add your first one (name, endpoint, API key)."
 }

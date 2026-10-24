@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../providers/domain/model_info.dart';
-import '../../../providers/domain/provider_registry.dart';
 import '../../../settings/app_settings.dart';
 import '../../../settings/state/settings_controller.dart';
 import '../../domain/models.dart';
@@ -51,8 +50,7 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
   }
 
   Set<ModelModality> _supportedFor(AppSettings settings) {
-    final provider = findProvider(settings.selectedProviderId);
-    final modelId = settings.selectedModelId ?? provider.defaultModel;
+    final modelId = settings.selectedModelId ?? '';
     return mediaModalitiesFor(modelId, declared: settings.modelModalities);
   }
 

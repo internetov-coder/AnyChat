@@ -388,6 +388,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ChatIssue.noKey => l10n.keyMissing,
       ChatIssue.noModel => l10n.errNoModel,
       ChatIssue.noChat => l10n.errNoChat,
+      ChatIssue.noProvider => l10n.errNoProvider,
     };
   }
 }

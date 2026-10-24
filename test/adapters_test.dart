@@ -58,7 +58,6 @@ ChatParams _params({
     baseUrl: baseUrl,
     model: model,
     maxTokens: maxTokens,
-    temperature: 0.5,
     turns: turns ??
         const <ChatTurn>[
           ChatTurn(role: 'system', content: 'Be brief.'),
@@ -87,7 +86,6 @@ void main() {
       expect(request.headers['Authorization'], 'Bearer sk-test-key');
       expect(request.body['model'], 'gpt-4o-mini');
       expect(request.body['stream'], isTrue);
-      expect(request.body['temperature'], 0.5);
       expect(request.body['max_tokens'], 100);
       final messages = request.body['messages'] as List<dynamic>;
       expect(messages, hasLength(4));
@@ -167,7 +165,7 @@ void main() {
       );
     });
 
-    test('serializes top_p and frequency_penalty for openai', () {
+    test('serializes frequency_penalty for openai', () {
       final request = adapter.buildChatRequest(
         ChatParams(
           apiKey: 'k',
@@ -176,11 +174,9 @@ void main() {
           turns: const <ChatTurn>[
             ChatTurn(role: 'user', content: 'hi'),
           ],
-          topP: 0.9,
           frequencyPenalty: 0.5,
         ),
       );
-      expect(request.body['top_p'], 0.9);
       expect(request.body['frequency_penalty'], 0.5);
       expect(request.body.containsKey('top_k'), isFalse);
     });
@@ -333,24 +329,6 @@ void main() {
       expect(adapter.lastUsage?.outputTokens, 64);
     });
 
-    test('serializes top_p and clamps temperature to 0..1 for anthropic', () {
-      final request = adapter.buildChatRequest(
-        ChatParams(
-          apiKey: 'k',
-          baseUrl: 'https://api.anthropic.com/v1',
-          model: 'claude-3-7-sonnet',
-          turns: const <ChatTurn>[
-            ChatTurn(role: 'user', content: 'hi'),
-          ],
-          temperature: 1.5,
-          topP: 0.8,
-        ),
-      );
-      expect(request.body['temperature'], 1.0);
-      expect(request.body['top_p'], 0.8);
-      expect(request.body.containsKey('frequency_penalty'), isFalse);
-    });
-
     test('builds anthropic base64 image parts', () {
       final request = adapter.buildChatRequest(
         ChatParams(
@@ -416,7 +394,6 @@ void main() {
       expect((contents[0] as Map<String, dynamic>)['role'], 'user');
       expect((contents[1] as Map<String, dynamic>)['role'], 'model');
       final config = request.body['generationConfig'] as Map<String, dynamic>;
-      expect(config['temperature'], 0.5);
       expect(config['maxOutputTokens'], 100);
     });
 
@@ -428,7 +405,7 @@ void main() {
       expect(request.url, '$baseUrl/models?key=AIza-Test_Key');
     });
 
-    test('serializes top_p and top_k in generationConfig', () {
+    test('serializes top_k in generationConfig', () {
       final request = adapter.buildChatRequest(
         ChatParams(
           apiKey: 'AIza-Test_Key',
@@ -437,14 +414,10 @@ void main() {
           turns: const <ChatTurn>[
             ChatTurn(role: 'user', content: 'hi'),
           ],
-          temperature: 0.4,
-          topP: 0.95,
           topK: 40,
         ),
       );
       final config = request.body['generationConfig'] as Map<String, dynamic>;
-      expect(config['temperature'], 0.4);
-      expect(config['topP'], 0.95);
       expect(config['topK'], 40);
       expect(config.containsKey('frequency_penalty'), isFalse);
     });

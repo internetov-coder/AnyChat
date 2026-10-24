@@ -2,12 +2,17 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../app_providers.dart';
 import '../data/provider_adapter.dart';
+import '../domain/custom_provider.dart';
 import '../domain/model_info.dart';
-import '../domain/provider_registry.dart';
 
 part 'providers_state.g.dart';
 
-/// Whether an API key is already stored for [providerId].
+/// All user-defined providers, ordered by creation.
+@riverpod
+Stream<List<CustomProvider>> customProviders(Ref ref) =>
+    ref.watch(providerConfigRepositoryProvider).watchAll();
+
+/// Whether an API key is stored for [providerId].
 @riverpod
 Future<bool> hasApiKey(Ref ref, String providerId) async {
   final keyStore = ref.watch(keyStoreProvider);
@@ -15,27 +20,23 @@ Future<bool> hasApiKey(Ref ref, String providerId) async {
   return key != null && key.trim().isNotEmpty;
 }
 
-/// Model catalog for a provider: the `/models` endpoint when available,
-/// falling back to the curated static list (no key or request failure).
+/// Model catalog for a user-defined provider: `GET {baseUrl}/models` when a
+/// key is present, empty list otherwise (the UI then relies on a manually
+/// entered model id).
 @riverpod
 Future<List<ModelInfo>> providerModels(Ref ref, String providerId) async {
-  final provider = findProvider(providerId);
+  final repo = ref.watch(providerConfigRepositoryProvider);
   final keyStore = ref.watch(keyStoreProvider);
-  final configRepo = ref.watch(providerConfigRepositoryProvider);
-  if (provider.modelsEndpoint == null) return provider.fallbackModels;
-
+  final provider = await repo.getProvider(providerId);
+  if (provider == null) return const <ModelInfo>[];
   final key = await keyStore.readKey(providerId);
-  if (key == null || key.trim().isEmpty) return provider.fallbackModels;
-
-  final baseUrl = await configRepo.baseUrlOverride(providerId) ??
-      provider.baseUrl;
+  if (key == null || key.trim().isEmpty) return const <ModelInfo>[];
   try {
-    final models = await adapterFor(provider.format).fetchModels(
+    return await adapterFor(provider.format).fetchModels(
       apiKey: key.trim(),
-      baseUrl: baseUrl,
+      baseUrl: provider.baseUrl,
     );
-    return models.isEmpty ? provider.fallbackModels : models;
   } catch (_) {
-    return provider.fallbackModels;
+    return const <ModelInfo>[];
   }
 }

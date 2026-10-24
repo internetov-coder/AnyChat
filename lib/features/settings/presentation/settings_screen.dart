@@ -7,9 +7,10 @@ import '../../../core/network/api_format.dart';
 import '../../../core/theme/accent_colors.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../models/presentation/models_screen.dart';
+import '../../providers/domain/custom_provider.dart';
 import '../../providers/domain/model_info.dart';
-import '../../providers/domain/provider_registry.dart';
 import '../../providers/presentation/providers_screen.dart';
+import '../../providers/state/providers_state.dart';
 import '../app_settings.dart';
 import '../state/settings_controller.dart';
 
@@ -186,12 +187,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _syncFromSettings(loaded);
     }
     final settings = loaded ?? const AppSettings();
-    final provider = findProvider(settings.selectedProviderId);
+    final providers = ref.watch(customProvidersProvider).when(
+          data: (List<CustomProvider> value) => value,
+          loading: () => const <CustomProvider>[],
+          error: (Object error, StackTrace stack) => const <CustomProvider>[],
+        );
+    CustomProvider? provider;
+    for (final candidate in providers) {
+      if (candidate.id == settings.selectedProviderId) {
+        provider = candidate;
+      }
+    }
     // Thinking levels for the selected model: whatever the catalog said
     // when the model was picked, otherwise the id-based heuristic.
     var efforts = settings.modelReasoningEfforts;
-    if (efforts.isEmpty &&
-        isReasoningModel(settings.selectedModelId ?? provider.defaultModel)) {
+    if (efforts.isEmpty && isReasoningModel(settings.selectedModelId ?? '')) {
       efforts = const <String>['low', 'medium', 'high'];
     }
     final effortValue = efforts.contains(settings.reasoningEffort)
@@ -209,7 +219,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             <Widget>[
               ListTile(
                 title: Text(l10n.providersTitle),
-                subtitle: Text(provider.displayName),
+                subtitle: Text(provider?.name ?? l10n.errNoProvider),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
@@ -227,12 +237,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ListTile(
                 leading: const Icon(Icons.auto_awesome_outlined),
                 title: Text(
-                  settings.selectedModelId ?? provider.defaultModel,
+                  settings.selectedModelId ?? l10n.errNoModel,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 subtitle: Text(
-                  '${l10n.currentModel}: ${provider.displayName}',
+                  '${l10n.currentModel}: ${provider?.name ?? l10n.errNoProvider}',
                 ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
@@ -248,27 +258,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             context,
             l10n.generateSection,
             <Widget>[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      'temperature = ${settings.temperature.toStringAsFixed(2)}',
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    Slider(
-                      value: settings.temperature,
-                      min: 0,
-                      max: 2,
-                      divisions: 20,
-                      label: settings.temperature.toStringAsFixed(2),
-                      onChanged: (double value) =>
-                          _controller.setTemperature(value),
-                    ),
-                  ],
-                ),
-              ),
               TextField(
                 controller: _maxTokensController,
                 keyboardType: TextInputType.number,
@@ -317,24 +306,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             context,
             l10n.advancedSettings,
             <Widget>[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      'top_p = ${settings.topP.toStringAsFixed(2)}',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    Slider(
-                      value: settings.topP,
-                      min: 0,
-                      max: 1,
-                      divisions: 100,
-                      label: settings.topP.toStringAsFixed(2),
-                      onChanged: (double value) => _controller.setTopP(value),
-                    ),
-                    if (provider.format == ApiFormat.openai) ...<Widget>[
+              if (provider?.format == ApiFormat.openai) ...<Widget>[
                       Text(
                         'frequency_penalty = '
                         '${settings.frequencyPenalty.toStringAsFixed(2)}',
@@ -350,7 +322,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             _controller.setFrequencyPenalty(value),
                       ),
                     ],
-                    if (provider.format == ApiFormat.gemini) ...<Widget>[
+                    if (provider?.format == ApiFormat.gemini) ...<Widget>[
                       Row(
                         children: <Widget>[
                           Text(
@@ -376,9 +348,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               _controller.setTopK(value.round()),
                         ),
                     ],
-                  ],
-                ),
-              ),
               if (efforts.isNotEmpty)
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16),

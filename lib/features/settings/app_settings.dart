@@ -9,18 +9,16 @@ class AppSettings {
   const AppSettings({
     this.themeMode = 'system',
     this.localeCode,
-    this.temperature = 0.7,
     this.maxTokens,
     this.timeoutSeconds = 90,
     this.systemPrompt = '',
-    this.topP = 1.0,
     this.frequencyPenalty = 0.0,
     this.topK,
     this.contextLimit,
     this.historyDepth,
     this.accentColor = 'system',
     this.reasoningEffort = '',
-    this.selectedProviderId = 'openai',
+    this.selectedProviderId = '',
     this.selectedModelId,
     this.modelContextWindow,
     this.modelContextApproximate = true,
@@ -34,13 +32,9 @@ class AppSettings {
 
   final String themeMode;
   final String? localeCode;
-  final double temperature;
   final int? maxTokens;
   final int timeoutSeconds;
   final String systemPrompt;
-
-  /// Nucleus sampling (sent to every wire format).
-  final double topP;
 
   /// OpenAI-only repetition penalty.
   final double frequencyPenalty;
@@ -77,18 +71,16 @@ class AppSettings {
     return AppSettings(
       themeMode: prefs.getString('theme_mode') ?? 'system',
       localeCode: prefs.getString('locale_code'),
-      temperature: prefs.getDouble('temperature') ?? 0.7,
       maxTokens: prefs.getInt('max_tokens'),
       timeoutSeconds: prefs.getInt('timeout_seconds') ?? 90,
       systemPrompt: prefs.getString('system_prompt') ?? '',
-      topP: prefs.getDouble('top_p') ?? 1.0,
       frequencyPenalty: prefs.getDouble('frequency_penalty') ?? 0.0,
       topK: prefs.getInt('top_k'),
       contextLimit: prefs.getInt('context_limit'),
       historyDepth: prefs.getInt('history_depth'),
       accentColor: prefs.getString('accent_color') ?? 'system',
       reasoningEffort: prefs.getString('reasoning_effort') ?? '',
-      selectedProviderId: prefs.getString('selected_provider') ?? 'openai',
+      selectedProviderId: prefs.getString('selected_provider') ?? '',
       selectedModelId: prefs.getString('selected_model'),
       modelContextWindow: prefs.getInt('model_context_window'),
       modelContextApproximate: prefs.getBool('model_context_approx') ?? true,
@@ -119,11 +111,9 @@ class AppSettings {
   AppSettings copyWith({
     String? themeMode,
     Object? localeCode = _unspecified,
-    double? temperature,
     Object? maxTokens = _unspecified,
     int? timeoutSeconds,
     String? systemPrompt,
-    double? topP,
     double? frequencyPenalty,
     Object? topK = _unspecified,
     Object? contextLimit = _unspecified,
@@ -143,12 +133,10 @@ class AppSettings {
       themeMode: themeMode ?? this.themeMode,
       localeCode:
           identical(localeCode, _unspecified) ? this.localeCode : localeCode as String?,
-      temperature: temperature ?? this.temperature,
       maxTokens:
           identical(maxTokens, _unspecified) ? this.maxTokens : maxTokens as int?,
       timeoutSeconds: timeoutSeconds ?? this.timeoutSeconds,
       systemPrompt: systemPrompt ?? this.systemPrompt,
-      topP: topP ?? this.topP,
       frequencyPenalty: frequencyPenalty ?? this.frequencyPenalty,
       topK: identical(topK, _unspecified) ? this.topK : topK as int?,
       contextLimit: identical(contextLimit, _unspecified)
@@ -197,11 +185,9 @@ class AppSettings {
   Future<void> persist(SharedPreferences prefs) async {
     await prefs.setString('theme_mode', themeMode);
     await _setOrNull(prefs, 'locale_code', localeCode);
-    await prefs.setDouble('temperature', temperature);
     await _setOrNull(prefs, 'max_tokens', maxTokens);
     await prefs.setInt('timeout_seconds', timeoutSeconds);
     await prefs.setString('system_prompt', systemPrompt);
-    await prefs.setDouble('top_p', topP);
     await prefs.setDouble('frequency_penalty', frequencyPenalty);
     await _setOrNull(prefs, 'top_k', topK);
     await _setOrNull(prefs, 'context_limit', contextLimit);

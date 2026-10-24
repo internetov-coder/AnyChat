@@ -35,15 +35,6 @@ class AnthropicAdapter extends ProviderAdapter {
     if (system != null) {
       body['system'] = system;
     }
-    final temperature = params.temperature;
-    if (temperature != null) {
-      // The Anthropic API accepts 0..1 only - clamp instead of failing.
-      body['temperature'] = temperature.clamp(0.0, 1.0);
-    }
-    final topP = params.topP;
-    if (topP != null) {
-      body['top_p'] = topP;
-    }
     return ChatRequest(
       url: joinUrl(params.baseUrl, '/messages'),
       headers: <String, String>{

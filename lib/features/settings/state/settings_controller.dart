@@ -36,9 +36,6 @@ class SettingsController extends _$SettingsController {
   Future<void> setLocale(String? value) =>
       _update((s) => s.copyWith(localeCode: value));
 
-  Future<void> setTemperature(double value) =>
-      _update((s) => s.copyWith(temperature: value));
-
   Future<void> setMaxTokens(int? value) =>
       _update((s) => s.copyWith(maxTokens: value));
 
@@ -47,8 +44,6 @@ class SettingsController extends _$SettingsController {
 
   Future<void> setSystemPrompt(String value) =>
       _update((s) => s.copyWith(systemPrompt: value));
-
-  Future<void> setTopP(double value) => _update((s) => s.copyWith(topP: value));
 
   Future<void> setFrequencyPenalty(double value) =>
       _update((s) => s.copyWith(frequencyPenalty: value));

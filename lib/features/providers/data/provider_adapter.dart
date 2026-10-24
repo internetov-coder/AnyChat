@@ -49,8 +49,6 @@ class ChatParams {
     required this.baseUrl,
     required this.model,
     required this.turns,
-    this.temperature,
-    this.topP,
     this.frequencyPenalty,
     this.topK,
     this.reasoningEffort,
@@ -62,8 +60,6 @@ class ChatParams {
   final String baseUrl;
   final String model;
   final List<ChatTurn> turns;
-  final double? temperature;
-  final double? topP;
   final double? frequencyPenalty;
   final int? topK;
 

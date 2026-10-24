@@ -6,7 +6,6 @@ import '../../../core/errors/api_error.dart';
 import '../../../core/storage/token_estimator.dart';
 import '../../../core/errors/debug_log.dart';
 import '../../../features/providers/data/provider_adapter.dart';
-import '../../../features/providers/domain/provider_registry.dart';
 import '../../settings/app_settings.dart';
 import '../../settings/state/settings_controller.dart';
 import '../data/message_repository.dart';
@@ -15,7 +14,7 @@ import '../domain/models.dart';
 part 'chat_session.g.dart';
 
 /// Pre-flight failures the UI has to localize itself.
-enum ChatIssue { noKey, noModel, noChat }
+enum ChatIssue { noKey, noModel, noChat, noProvider }
 
 /// Live state of the chat screen: streaming buffer, busy flags and the last
 /// failure (localized by the widget layer via [ChatSessionState.lastIssue] or
@@ -233,8 +232,6 @@ class ChatSession extends _$ChatSession {
         baseUrl: session.baseUrl,
         model: session.model,
         turns: turns,
-        temperature: session.settings.temperature,
-        topP: session.settings.topP,
         frequencyPenalty: session.settings.frequencyPenalty,
         topK: session.settings.topK,
         reasoningEffort: session.settings.reasoningEffort.isEmpty
@@ -298,8 +295,14 @@ class ChatSession extends _$ChatSession {
     final branchId = await chatRepo.ensureActiveBranch(chatId, chat);
 
     final settings = await ref.read(settingsControllerProvider.future);
-    final provider = findProvider(settings.selectedProviderId);
-    final model = settings.selectedModelId ?? provider.defaultModel;
+    final provider = await ref
+        .read(providerConfigRepositoryProvider)
+        .getProvider(settings.selectedProviderId);
+    if (provider == null) {
+      state = const ChatSessionState(lastIssue: ChatIssue.noProvider);
+      return null;
+    }
+    final model = settings.selectedModelId ?? '';
     if (model.trim().isEmpty) {
       state = const ChatSessionState(lastIssue: ChatIssue.noModel);
       return null;
@@ -309,16 +312,13 @@ class ChatSession extends _$ChatSession {
       state = const ChatSessionState(lastIssue: ChatIssue.noKey);
       return null;
     }
-    final baseUrl =
-        await ref.read(providerConfigRepositoryProvider).baseUrlOverride(provider.id) ??
-            provider.baseUrl;
     return _Session(
       chat: chat,
       branchId: branchId,
       settings: settings,
       adapter: adapterFor(provider.format),
       apiKey: key.trim(),
-      baseUrl: baseUrl,
+      baseUrl: provider.baseUrl,
       model: model,
     );
   }
@@ -384,8 +384,6 @@ class ChatSession extends _$ChatSession {
       baseUrl: session.baseUrl,
       model: session.model,
       turns: turns,
-      temperature: session.settings.temperature,
-      topP: session.settings.topP,
       frequencyPenalty: session.settings.frequencyPenalty,
       topK: session.settings.topK,
       reasoningEffort: session.settings.reasoningEffort.isEmpty

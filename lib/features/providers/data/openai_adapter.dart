@@ -21,8 +21,6 @@ class OpenAIAdapter extends ProviderAdapter {
           for (final turn in turns) _messageFor(turn),
         ],
         'stream': true,
-        if (params.temperature != null) 'temperature': params.temperature,
-        if (params.topP != null) 'top_p': params.topP,
         if (params.frequencyPenalty != null)
           'frequency_penalty': params.frequencyPenalty,
         if (params.reasoningEffort != null)

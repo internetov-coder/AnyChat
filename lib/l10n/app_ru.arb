@@ -182,5 +182,12 @@
   "statInput": "input",
   "statOutput": "output",
   "statThinking": "thinking",
-  "reasoningOff": "Не отправлять"
+  "reasoningOff": "Не отправлять",
+  "errNoProvider": "Сначала добавьте провайдера.",
+  "addProvider": "Добавить провайдера",
+  "providerNameLabel": "Название провайдера",
+  "endpointLabel": "Эндпоинт (Base URL)",
+  "deleteProvider": "Удалить провайдера",
+  "editProvider": "Изменить",
+  "noProvidersYet": "Провайдеров пока нет. Нажмите +, чтобы добавить первый (название, эндпоинт, API-ключ)."
 }

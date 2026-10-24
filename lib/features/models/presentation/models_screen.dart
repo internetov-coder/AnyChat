@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/storage/token_estimator.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../providers/domain/model_info.dart';
-import '../../providers/domain/provider_registry.dart';
+import '../../providers/domain/custom_provider.dart';
 import '../../providers/presentation/providers_screen.dart';
 import '../../providers/state/providers_state.dart';
 import '../../settings/app_settings.dart';
@@ -46,14 +46,51 @@ class _ModelsScreenState extends ConsumerState<ModelsScreen> {
           loading: () => const AppSettings(),
           error: (Object error, StackTrace stack) => const AppSettings(),
         );
-    final provider = findProvider(settings.selectedProviderId);
-    final modelsAsync = ref.watch(providerModelsProvider(provider.id));
-    final hasKey = ref.watch(hasApiKeyProvider(provider.id)).when(
+    final providers = ref.watch(customProvidersProvider).when(
+          data: (List<CustomProvider> value) => value,
+          loading: () => const <CustomProvider>[],
+          error: (Object error, StackTrace stack) => const <CustomProvider>[],
+        );
+    CustomProvider? provider;
+    for (final candidate in providers) {
+      if (candidate.id == settings.selectedProviderId) provider = candidate;
+    }
+    final providerId = provider?.id ?? '';
+    final modelsAsync = ref.watch(providerModelsProvider(providerId));
+    final hasKey = ref.watch(hasApiKeyProvider(providerId)).when(
           data: (bool value) => value,
           loading: () => false,
           error: (Object error, StackTrace stack) => false,
         );
     final selectedModelId = settings.selectedModelId;
+
+    if (provider == null) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.modelsTitle)),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(l10n.errNoProvider, textAlign: TextAlign.center),
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (BuildContext routeContext) =>
+                          const ProvidersScreen(),
+                    ),
+                  ),
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.addProvider),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -61,7 +98,7 @@ class _ModelsScreenState extends ConsumerState<ModelsScreen> {
         actions: <Widget>[
           IconButton(
             onPressed: () =>
-                ref.invalidate(providerModelsProvider(provider.id)),
+                ref.invalidate(providerModelsProvider(providerId)),
             icon: const Icon(Icons.refresh),
           ),
         ],
@@ -71,7 +108,7 @@ class _ModelsScreenState extends ConsumerState<ModelsScreen> {
         children: <Widget>[
           ListTile(
             leading: const Icon(Icons.dns_outlined),
-            title: Text(provider.displayName),
+            title: Text(provider.name),
             subtitle: Text('${l10n.formatLabel}: ${provider.format.name}'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
@@ -132,9 +169,9 @@ class _ModelsScreenState extends ConsumerState<ModelsScreen> {
                 children: <Widget>[
                   for (final model in filtered)
                     _ModelTile(
-                      key: ValueKey<String>('${provider.id}/${model.id}'),
+                      key: ValueKey<String>('${providerId}/${model.id}'),
                       model: model,
-                      providerId: provider.id,
+                      providerId: providerId,
                       selected: model.id == selectedModelId,
                     ),
 
@@ -150,7 +187,7 @@ class _ModelsScreenState extends ConsumerState<ModelsScreen> {
                   child: TextField(
                     controller: _customController,
                     onSubmitted: (String value) =>
-                        _applyCustomModel(provider.id),
+                        _applyCustomModel(providerId),
                     decoration: InputDecoration(
                       labelText: l10n.customModelLabel,
                       isDense: true,
@@ -163,7 +200,7 @@ class _ModelsScreenState extends ConsumerState<ModelsScreen> {
                 ),
                 const SizedBox(width: 8),
                 FilledButton(
-                  onPressed: () => _applyCustomModel(provider.id),
+                  onPressed: () => _applyCustomModel(providerId),
                   child: Text(l10n.customModelApply),
                 ),
               ],
