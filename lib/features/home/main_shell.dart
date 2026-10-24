@@ -3,14 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../chat/presentation/chat_screen.dart';
+import '../chat/presentation/widgets/menu_glyph.dart';
+import '../chat/presentation/widgets/chat_composer.dart';
+import '../chat/state/chat_session.dart';
 import '../chat/state/current_chat.dart';
+import '../chat/domain/models.dart';
 import 'chat_drawer.dart';
 
 /// ChatGPT-style entry point: opens straight into the current chat.
 ///
-/// The hamburger in the chat's app bar opens [ChatDrawer] with recent chats
-/// and the settings entry point; when there is no chat yet, a "new chat"
-/// home is shown.
+/// Without a chat yet it shows the empty state — floating menu button,
+/// a big "С чего начнем?" headline and the composer, which creates the
+/// first chat on send.
 class MainShell extends ConsumerWidget {
   const MainShell({super.key});
 
@@ -23,7 +27,6 @@ class MainShell extends ConsumerWidget {
         body: Center(child: CircularProgressIndicator()),
       ),
       error: (Object error, StackTrace stack) => Scaffold(
-        appBar: AppBar(title: Text(l10n.appTitle)),
         body: Center(child: Text(l10n.errUnknown('$error'))),
       ),
       data: (int? chatId) {
@@ -41,41 +44,73 @@ class _EmptyHome extends ConsumerWidget {
 
   final AppLocalizations l10n;
 
+  Future<void> _send(
+    BuildContext context,
+    WidgetRef ref,
+    String text,
+    List<ChatAttachment> attachments,
+  ) async {
+    final shell = ref.read(currentChatProvider.notifier);
+    await shell.startNewChat(l10n.newChat);
+    final current = ref.read(currentChatProvider);
+    final newChatId = current.when<int?>(
+      data: (int? value) => value,
+      loading: () => null,
+      error: (Object error, StackTrace stack) => null,
+    );
+    if (newChatId == null) return;
+    await ref.read(chatSessionProvider.notifier).send(
+          newChatId,
+          text,
+          attachments: attachments,
+        );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return Scaffold(
       drawer: const ChatDrawer(),
-      appBar: AppBar(title: Text(l10n.appTitle)),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+      body: Builder(
+        builder: (BuildContext scaffoldContext) => SafeArea(
+          child: Stack(
             children: <Widget>[
-              Icon(
-                Icons.chat_bubble_outline,
-                size: 72,
-                color: theme.colorScheme.outline,
+              Column(
+                children: <Widget>[
+                  const SizedBox(height: 56),
+                  Expanded(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          l10n.startWith,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  ChatComposer(
+                    isBusy: false,
+                    onStop: () {},
+                    onSend: (String text, List<ChatAttachment> attachments) =>
+                        _send(context, ref, text, attachments),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              Text(l10n.appTitle, style: theme.textTheme.headlineSmall),
-              const SizedBox(height: 8),
-              Text(
-                l10n.emptyChatHint,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-              ),
-              const SizedBox(height: 24),
-              FilledButton.icon(
-                onPressed: () async {
-                  await ref
-                      .read(currentChatProvider.notifier)
-                      .startNewChat(l10n.newChat);
-                },
-                icon: const Icon(Icons.add),
-                label: Text(l10n.newChat),
+              Positioned(
+                top: 4,
+                left: 4,
+                child: Builder(
+                  builder: (BuildContext buttonContext) => IconButton(
+                    tooltip: l10n.menu,
+                    icon: const MenuGlyph(),
+                    onPressed: () =>
+                        Scaffold.of(buttonContext).openDrawer(),
+                  ),
+                ),
               ),
             ],
           ),

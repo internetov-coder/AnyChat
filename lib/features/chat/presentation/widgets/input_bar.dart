@@ -5,10 +5,9 @@ import '../../../providers/domain/model_info.dart';
 import '../../domain/models.dart';
 import 'attachment_view.dart';
 
-/// Message input: filled `TextField` with `extraLarge` (28dp) rounding,
-/// attachment chip row and a filled icon button on the right
-/// (send / stop while streaming). The attach button is disabled when the
-/// current model accepts no media at all.
+/// ChatGPT-style composer: one rounded capsule with the "+" attachment button
+/// on the left, the message field in the middle and a circular send/stop
+/// button on the right. Attachment chips float above the capsule.
 class InputBar extends StatelessWidget {
   const InputBar({
     super.key,
@@ -73,34 +72,31 @@ class InputBar extends StatelessWidget {
               filled: true,
               fillColor: scheme.surfaceContainerHigh,
               contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
+                horizontal: 4,
                 vertical: 12,
+              ),
+              prefixIcon: IconButton(
+                icon: const Icon(Icons.add),
+                tooltip: canAttach ? l10n.attach : l10n.unsupportedForModel,
+                onPressed: canAttach ? onAttach : null,
+              ),
+              suffixIcon: Padding(
+                padding: const EdgeInsetsDirectional.only(end: 4),
+                child: isBusy
+                    ? IconButton.filled(
+                        onPressed: onStop,
+                        tooltip: l10n.stop,
+                        icon: const Icon(Icons.stop),
+                      )
+                    : IconButton.filled(
+                        onPressed: onSend,
+                        tooltip: l10n.send,
+                        icon: const Icon(Icons.arrow_upward),
+                      ),
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(28),
                 borderSide: BorderSide.none,
-              ),
-              suffixIcon: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  IconButton(
-                    icon: const Icon(Icons.attach_file),
-                    tooltip:
-                        canAttach ? l10n.attach : l10n.unsupportedForModel,
-                    onPressed: canAttach ? onAttach : null,
-                  ),
-                  isBusy
-                      ? IconButton.filled(
-                          onPressed: onStop,
-                          tooltip: l10n.stop,
-                          icon: const Icon(Icons.stop),
-                        )
-                      : IconButton.filled(
-                          onPressed: onSend,
-                          tooltip: l10n.send,
-                          icon: const Icon(Icons.send),
-                        ),
-                ],
               ),
             ),
           ),

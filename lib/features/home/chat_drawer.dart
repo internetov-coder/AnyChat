@@ -6,9 +6,11 @@ import '../../l10n/app_localizations.dart';
 import '../settings/presentation/settings_screen.dart';
 import '../chat/domain/models.dart';
 import '../chat/state/chat_providers.dart';
+import '../chat/state/chat_session.dart';
 import '../chat/state/current_chat.dart';
 
-/// Left drawer (ChatGPT style): recent chats on top, settings at the bottom.
+/// Left drawer in the ChatGPT layout: brand header with a new-chat button,
+/// the recent chats list and a footer row (new-chat pill + settings).
 class ChatDrawer extends ConsumerWidget {
   const ChatDrawer({super.key});
 
@@ -28,22 +30,26 @@ class ChatDrawer extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-            child: FilledButton.icon(
-              onPressed: () => _startNewChat(context, ref, l10n),
-              icon: const Icon(Icons.add),
-              label: Text(l10n.newChat),
+            padding: const EdgeInsets.fromLTRB(16, 16, 8, 8),
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    l10n.appTitle,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                IconButton.filledTonal(
+                  tooltip: l10n.newChat,
+                  icon: const Icon(Icons.edit_outlined),
+                  onPressed: () => _startNewChat(context, ref, l10n),
+                ),
+              ],
             ),
           ),
           const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Text(
-              l10n.recentChats,
-              style: theme.textTheme.titleSmall
-                  ?.copyWith(color: theme.colorScheme.primary),
-            ),
-          ),
           Expanded(
             child: chatsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -57,6 +63,8 @@ class ChatDrawer extends ConsumerWidget {
                       child: Text(
                         l10n.chatsEmpty,
                         textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyMedium
+                            ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                       ),
                     ),
                   );
@@ -76,10 +84,15 @@ class ChatDrawer extends ConsumerWidget {
                       onTap: () => _openChat(context, ref, chat.id),
                       trailing: PopupMenuButton<String>(
                         onSelected: (String value) {
-                          if (value == 'rename') {
-                            _renameChat(context, ref, l10n, chat);
-                          } else if (value == 'delete') {
-                            _deleteChat(context, ref, l10n, chat, currentId);
+                          switch (value) {
+                            case 'rename':
+                              _renameChat(context, ref, l10n, chat);
+                            case 'summarize':
+                              _summarizeChat(context, ref, l10n, chat);
+                            case 'prompt':
+                              _chatSystemPrompt(context, ref, chat);
+                            case 'delete':
+                              _deleteChat(context, ref, l10n, chat, currentId);
                           }
                         },
                         itemBuilder: (BuildContext menuContext) =>
@@ -87,6 +100,14 @@ class ChatDrawer extends ConsumerWidget {
                           PopupMenuItem<String>(
                             value: 'rename',
                             child: Text(l10n.renameChat),
+                          ),
+                          PopupMenuItem<String>(
+                            value: 'summarize',
+                            child: Text(l10n.handoff),
+                          ),
+                          PopupMenuItem<String>(
+                            value: 'prompt',
+                            child: Text(l10n.systemPromptLabel),
                           ),
                           PopupMenuItem<String>(
                             value: 'delete',
@@ -101,20 +122,39 @@ class ChatDrawer extends ConsumerWidget {
             ),
           ),
           const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.settings_outlined),
-            title: Text(l10n.settingsTitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              final navigator = Navigator.of(context);
-              navigator.pop();
-              navigator.push(
-                MaterialPageRoute<void>(
-                  builder: (BuildContext routeContext) =>
-                      const SettingsScreen(),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: <Widget>[
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    shape: const StadiumBorder(),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 14,
+                    ),
+                  ),
+                  onPressed: () => _startNewChat(context, ref, l10n),
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  label: Text(l10n.newChat),
                 ),
-              );
-            },
+                const Spacer(),
+                IconButton.filledTonal(
+                  tooltip: l10n.settingsTitle,
+                  icon: const Icon(Icons.settings_outlined),
+                  onPressed: () {
+                    final navigator = Navigator.of(context);
+                    navigator.pop();
+                    navigator.push(
+                      MaterialPageRoute<void>(
+                        builder: (BuildContext routeContext) =>
+                            const SettingsScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -177,6 +217,66 @@ class ChatDrawer extends ConsumerWidget {
     final title = result?.trim();
     if (title == null || title.isEmpty || !context.mounted) return;
     await ref.read(chatRepositoryProvider).renameChat(chat.id, title);
+  }
+
+  /// Handoff: asks the model for a summary and opens a new chat with it.
+  Future<void> _summarizeChat(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+    Chat chat,
+  ) async {
+    final newChatId = await ref
+        .read(chatSessionProvider.notifier)
+        .summarize(chat.id, prompt: l10n.handoffPrompt);
+    if (!context.mounted || newChatId == null) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.handoffDone)),
+    );
+    ref.read(currentChatProvider.notifier).open(newChatId);
+    if (context.mounted) Navigator.of(context).pop();
+  }
+
+  Future<void> _chatSystemPrompt(
+    BuildContext context,
+    WidgetRef ref,
+    Chat chat,
+  ) async {
+    final controller = TextEditingController(text: chat.systemPrompt ?? '');
+    String? result;
+    try {
+      result = await showDialog<String>(
+        context: context,
+        builder: (BuildContext dialogContext) {
+          final l10n = AppLocalizations.of(dialogContext);
+          return AlertDialog(
+            title: Text(l10n.chatSystemPromptLabel),
+            content: TextField(
+              controller: controller,
+              autofocus: true,
+              minLines: 3,
+              maxLines: 8,
+              decoration: InputDecoration(helperText: l10n.systemPromptHint),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: Text(l10n.cancel),
+              ),
+              FilledButton(
+                onPressed: () =>
+                    Navigator.of(dialogContext).pop(controller.text),
+                child: Text(l10n.save),
+              ),
+            ],
+          );
+        },
+      );
+    } finally {
+      controller.dispose();
+    }
+    if (result == null || !context.mounted) return;
+    await ref.read(chatRepositoryProvider).setSystemPrompt(chat.id, result);
   }
 
   Future<void> _deleteChat(

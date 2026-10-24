@@ -346,7 +346,6 @@ class _ProviderDetailState extends ConsumerState<_ProviderDetail> {
                   onChanged: _saveBaseUrl,
                   decoration: InputDecoration(
                     labelText: l10n.baseUrlOverride,
-                    hintText: provider.baseUrl,
                     helperText: l10n.baseUrlHint,
                     isDense: true,
                     border: OutlineInputBorder(
