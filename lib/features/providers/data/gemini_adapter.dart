@@ -1,4 +1,4 @@
-import '../../../core/network/api_error.dart';
+import '../../../core/errors/api_error.dart';
 import '../../../core/network/api_format.dart';
 import '../domain/model_info.dart';
 import 'provider_adapter.dart';

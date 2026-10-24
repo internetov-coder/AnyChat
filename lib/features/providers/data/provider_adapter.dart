@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 
-import '../../../core/network/api_error.dart';
+import '../../../core/errors/api_error.dart';
 import '../../../core/network/api_format.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/network/sse_parser.dart';

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:anychat/core/network/api_error.dart';
+import 'package:anychat/core/errors/api_error.dart';
 import 'package:anychat/core/network/api_format.dart';
 import 'package:anychat/features/providers/data/anthropic_adapter.dart';
 import 'package:anychat/features/providers/data/gemini_adapter.dart';

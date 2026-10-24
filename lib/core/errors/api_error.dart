@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 
-import 'api_format.dart';
+import '../network/api_format.dart';
 
 /// Human-readable categories of API failures.
 enum ApiErrorType {
