@@ -22,26 +22,32 @@ class AnyChatApp extends ConsumerWidget {
       loading: () => const AppSettings(),
       error: (Object error, StackTrace stack) => const AppSettings(),
     );
-    final localeCode = settings.localeCode;
-
     return DynamicColorBuilder(
-      builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
-        final lightScheme = lightDynamic ??
-            ColorScheme.fromSeed(seedColor: _seed, brightness: Brightness.light);
-        final darkScheme = darkDynamic ??
-            ColorScheme.fromSeed(seedColor: _seed, brightness: Brightness.dark);
-        return MaterialApp(
-          title: 'AnyChat',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(useMaterial3: true, colorScheme: lightScheme),
-          darkTheme: ThemeData(useMaterial3: true, colorScheme: darkScheme),
-          themeMode: _themeMode(settings.themeMode),
-          locale: localeCode == null ? null : Locale(localeCode),
-          supportedLocales: AppLocalizations.supportedLocales,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          home: const HomeShell(),
-        );
-      },
+      builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) =>
+          _buildApp(settings, lightDynamic, darkDynamic),
+    );
+  }
+
+  Widget _buildApp(
+    AppSettings settings,
+    ColorScheme? lightDynamic,
+    ColorScheme? darkDynamic,
+  ) {
+    final lightScheme = lightDynamic ??
+        ColorScheme.fromSeed(seedColor: _seed, brightness: Brightness.light);
+    final darkScheme = darkDynamic ??
+        ColorScheme.fromSeed(seedColor: _seed, brightness: Brightness.dark);
+    final localeCode = settings.localeCode;
+    return MaterialApp(
+      title: 'AnyChat',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(useMaterial3: true, colorScheme: lightScheme),
+      darkTheme: ThemeData(useMaterial3: true, colorScheme: darkScheme),
+      themeMode: _themeMode(settings.themeMode),
+      locale: localeCode == null ? null : Locale(localeCode),
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      home: const HomeShell(),
     );
   }
 

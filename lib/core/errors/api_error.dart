@@ -205,6 +205,7 @@ class ApiError implements Exception {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
+      case DioExceptionType.transformTimeout:
         return ApiError(
           type: ApiErrorType.timeout,
           raw: exception.message ?? exception.toString(),
@@ -224,7 +225,13 @@ class ApiError implements Exception {
           format: format,
           headers: exception.response?.headers.map,
         );
-      case DioExceptionType.unknown:
+      case DioExceptionType.cancel:
+        return ApiError(
+          type: ApiErrorType.unknown,
+          raw: exception.toString(),
+          cause: exception,
+        );
+      default:
         final error = exception.error;
         if (error is SocketException || error is HttpException) {
           return ApiError(
@@ -236,12 +243,6 @@ class ApiError implements Exception {
         return ApiError(
           type: ApiErrorType.unknown,
           raw: '${exception.message ?? ''} ${error ?? ''}',
-          cause: exception,
-        );
-      case DioExceptionType.cancel:
-        return ApiError(
-          type: ApiErrorType.unknown,
-          raw: exception.toString(),
           cause: exception,
         );
     }
