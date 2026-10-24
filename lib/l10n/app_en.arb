@@ -159,5 +159,12 @@
   "attach": "Attach file",
   "removeAttachment": "Remove attachment",
   "attachmentTooBig": "File is too large (max 20 MB).",
-  "unsupportedForModel": "The selected model doesn't support attachments."
+  "unsupportedForModel": "The selected model doesn't support attachments.",
+  "copy": "Copy",
+  "copied": "Copied",
+  "advancedSettings": "Advanced parameters",
+  "contextLimitLabel": "Context limit (tokens)",
+  "contextLimitHint": "Empty = from model metadata (or 128k)",
+  "historyDepthLabel": "History depth (messages)",
+  "historyDepthHint": "Empty = whole history"
 }

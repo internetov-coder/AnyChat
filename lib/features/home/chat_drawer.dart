@@ -25,8 +25,10 @@ class ChatDrawer extends ConsumerWidget {
           error: (Object error, StackTrace stack) => null,
         );
 
-    return SafeArea(
-      child: Column(
+    return Drawer(
+      backgroundColor: theme.colorScheme.surface,
+      child: SafeArea(
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Padding(
@@ -157,6 +159,7 @@ class ChatDrawer extends ConsumerWidget {
             ),
           ),
         ],
+        ),
       ),
     );
   }

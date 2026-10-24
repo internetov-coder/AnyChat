@@ -159,5 +159,12 @@
   "attach": "Прикріпити файл",
   "removeAttachment": "Прибрати вкладення",
   "attachmentTooBig": "Файл завеликий (макс. 20 МБ).",
-  "unsupportedForModel": "Обрана модель не підтримує вкладення."
+  "unsupportedForModel": "Обрана модель не підтримує вкладення.",
+  "copy": "Копіювати",
+  "copied": "Скопійовано",
+  "advancedSettings": "Розширені параметри",
+  "contextLimitLabel": "Ліміт контексту (токенів)",
+  "contextLimitHint": "Порожньо = з метаданих моделі (або 128k)",
+  "historyDepthLabel": "Глибина історії (повідомлень)",
+  "historyDepthHint": "Порожньо = вся історія"
 }

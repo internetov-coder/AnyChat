@@ -124,11 +124,13 @@ const List<ProviderInfo> kProviders = <ProviderInfo>[
     id: 'xiaomi',
     displayName: 'Xiaomi MiMo',
     format: ApiFormat.openai,
-    // TODO: confirm the public MiMo endpoint; adjust if Xiaomi publishes a
-    // different host or path for its OpenAI-compatible API.
+    // Verified against the live API: GET /v1/models and
+    // POST /v1/chat/completions answer 401 "Invalid API Key" without a
+    // key — host, path and Bearer auth of the OpenAI-compatible API are
+    // confirmed.
     baseUrl: 'https://api.xiaomimimo.com/v1',
     defaultModel: 'mimo-7b-rl',
-    modelsEndpoint: null,
+    modelsEndpoint: '/models',
     fallbackModels: <ModelInfo>[
       ModelInfo(
         id: 'mimo-7b-rl',
