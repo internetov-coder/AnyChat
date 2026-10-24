@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/errors/debug_log.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../models/presentation/models_screen.dart';
 import '../../providers/domain/provider_registry.dart';
 import '../../providers/presentation/providers_screen.dart';
 import '../app_settings.dart';
@@ -146,6 +147,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   MaterialPageRoute<void>(
                     builder: (BuildContext routeContext) =>
                         const ProvidersScreen(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          _section(
+            context,
+            l10n.modelsTitle,
+            <Widget>[
+              ListTile(
+                leading: const Icon(Icons.auto_awesome_outlined),
+                title: Text(
+                  settings.selectedModelId ?? provider.defaultModel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(
+                  '${l10n.currentModel}: ${provider.displayName}',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (BuildContext routeContext) =>
+                        const ModelsScreen(),
                   ),
                 ),
               ),

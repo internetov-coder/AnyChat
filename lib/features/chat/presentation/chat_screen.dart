@@ -5,10 +5,12 @@ import '../../../app_providers.dart';
 import '../../../core/errors/error_localizer.dart';
 import '../domain/models.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../home/chat_drawer.dart';
 import '../../settings/app_settings.dart';
 import '../../settings/state/settings_controller.dart';
 import '../state/chat_providers.dart';
 import '../state/chat_session.dart';
+import '../state/current_chat.dart';
 import 'widgets/context_bar.dart';
 import 'widgets/input_bar.dart';
 import 'widgets/message_bubble.dart';
@@ -175,11 +177,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(l10n.handoffDone)),
     );
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(
-        builder: (BuildContext routeContext) => ChatScreen(chatId: newChatId),
-      ),
-    );
+    ref.read(currentChatProvider.notifier).open(newChatId);
   }
 
   Future<void> _deleteChat(Chat chat) async {
@@ -206,7 +204,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (confirmed != true || !mounted) return;
     await ref.read(chatRepositoryProvider).deleteChat(chat.id);
     if (!mounted) return;
-    Navigator.of(context).pop();
+    ref.read(currentChatProvider.notifier).closeChat();
   }
 
   @override
@@ -258,9 +256,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ),
       data: (Chat? chat) {
         if (chat == null) {
+          // The chat was deleted: fall back to the new-chat home.
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
-              Navigator.of(context).maybePop();
+              ref.read(currentChatProvider.notifier).closeChat();
             }
           });
           return Scaffold(
@@ -269,6 +268,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           );
         }
         return Scaffold(
+          drawer: const ChatDrawer(),
           appBar: AppBar(
             title: Text(
               chat.title,

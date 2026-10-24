@@ -2,7 +2,7 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'features/home/home_shell.dart';
+import 'features/home/main_shell.dart';
 import 'features/settings/app_settings.dart';
 import 'features/settings/state/settings_controller.dart';
 import 'l10n/app_localizations.dart';
@@ -58,7 +58,7 @@ class AnyChatApp extends ConsumerWidget {
       locale: localeCode == null ? null : Locale(localeCode),
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      home: const HomeShell(),
+      home: const MainShell(),
     );
   }
 

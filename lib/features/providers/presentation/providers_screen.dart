@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app_providers.dart';
+import '../../../core/errors/api_error.dart';
+import '../../../core/errors/debug_log.dart';
+import '../../../core/errors/error_localizer.dart';
 import '../../../core/storage/secure_storage.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/provider_adapter.dart';
@@ -73,6 +76,7 @@ class _ProviderDetailState extends ConsumerState<_ProviderDetail> {
   bool _checking = false;
   String? _keyMask;
   String? _checkResult;
+  ApiError? _checkError;
 
   @override
   void dispose() {
@@ -122,6 +126,7 @@ class _ProviderDetailState extends ConsumerState<_ProviderDetail> {
       _hasKey = true;
       _keyMask = mask;
       _checkResult = null;
+      _checkError = null;
       _keyController.clear();
     });
     _showMessage(l10n.keySavedMasked(mask));
@@ -137,6 +142,7 @@ class _ProviderDetailState extends ConsumerState<_ProviderDetail> {
       _hasKey = false;
       _keyMask = null;
       _checkResult = null;
+      _checkError = null;
       _keyController.clear();
     });
     _showMessage(l10n.keyRemoved);
@@ -158,34 +164,49 @@ class _ProviderDetailState extends ConsumerState<_ProviderDetail> {
     setState(() {
       _checking = true;
       _checkResult = null;
+      _checkError = null;
     });
+
     final urlText = _urlController.text.trim();
     final baseUrl = urlText.isEmpty ? provider.baseUrl : urlText;
+    // Probe with the very model this provider chats with, so the check
+    // matches a real request as closely as possible.
+    final settings = await ref.read(settingsControllerProvider.future);
+    final model = settings.selectedProviderId == provider.id
+        ? (settings.selectedModelId ?? provider.defaultModel)
+        : provider.defaultModel;
+
     String result;
+    ApiError? failure;
     try {
-      // Always probe with a minimal completion: some model catalogs (e.g.
-      // the Vercel AI Gateway) are public and would not prove the key works.
+      // A tiny completion proves the key: some model catalogs (e.g. the
+      // Vercel AI Gateway) are public and would accept a broken key.
       final probe = ChatParams(
         apiKey: apiKey,
         baseUrl: baseUrl,
-        model: provider.defaultModel,
+        model: model,
         turns: const <ChatTurn>[
           ChatTurn(role: 'user', content: 'ping'),
         ],
-        maxTokens: 1,
-        timeout: const Duration(seconds: 30),
+        maxTokens: 32,
+        timeout: const Duration(seconds: 60),
       );
       await for (final _ in adapterFor(provider.format).streamChat(probe)) {
         // Drain the stream: a completed request proves the key works.
       }
       result = 'ok';
-    } catch (_) {
+    } catch (e) {
       result = 'fail';
+      if (e is ApiError) {
+        failure = e;
+        ref.read(debugLogProvider.notifier).add(e);
+      }
     }
     if (!mounted) return;
     setState(() {
       _checking = false;
       _checkResult = result;
+      _checkError = failure;
     });
   }
 
@@ -215,6 +236,7 @@ class _ProviderDetailState extends ConsumerState<_ProviderDetail> {
 
     final mask = _keyMask;
     final checkResult = _checkResult;
+    final checkError = _checkError;
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -294,14 +316,25 @@ class _ProviderDetailState extends ConsumerState<_ProviderDetail> {
           if (checkResult != null)
             Padding(
               padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                checkResult == 'ok' ? l10n.keyOk : l10n.keyFailed,
-                style: TextStyle(
-                  color: checkResult == 'ok'
-                      ? const Color(0xFF2E7D32)
-                      : scheme.error,
-                  fontWeight: FontWeight.w600,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    checkResult == 'ok' ? l10n.keyOk : l10n.keyFailed,
+                    style: TextStyle(
+                      color: checkResult == 'ok'
+                          ? const Color(0xFF2E7D32)
+                          : scheme.error,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (checkResult == 'fail' && checkError != null)
+                    Text(
+                      localizeApiError(l10n, checkError),
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: scheme.error),
+                    ),
+                ],
               ),
             ),
           const SizedBox(height: 16),

@@ -5,6 +5,7 @@
   "navModels": "Models",
   "navSettings": "Settings",
   "chatsEmpty": "No chats yet. Create one to get started.",
+  "recentChats": "Recent chats",
   "newChat": "New chat",
   "deleteChat": "Delete chat",
   "renameChat": "Rename",
