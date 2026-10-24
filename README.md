@@ -40,8 +40,9 @@ AnyChat — Android-приложение на Flutter для общения с L
 
 ## Установка
 
-Каждый зелёный push в `main` публикует **GitHub Release** с тегом `rN`
-и ассетом `AnyChat-arm64-rN.apk`:
+Каждый push **с изменениями кода** в `main` публикует **GitHub Release**
+с тегом `rN` и ассетом `AnyChat-arm64-rN.apk` (push, где тронута только
+документация, CI не запускает — фильтр `paths-ignore`):
 
 1. Откройте страницу **Releases** репозитория → последний релиз `rN`.
 2. Скачайте ассет `AnyChat-arm64-rN.apk`.
@@ -277,6 +278,9 @@ Drawer (гамбургер): **AnyChat** + кнопка нового чата, �
 **Политика CI:** `flutter analyze` — **0 issues** (любые error / warning /
 info валят прогон), `flutter test` — зелёный, `flutter build apk
 --release` — собирается, артефакт `AnyChat-<sha>` + релиз `rN`.
+
+Push, затрагивающий только `**/*.md`, `LICENSE` или `.gitignore`, workflow
+не запускает вовсе (`paths-ignore`) — правка README не пересобирает APK.
 
 Этапы workflow (`.github/workflows/build.yml`):
 
