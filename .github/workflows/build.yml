@@ -61,21 +61,10 @@ jobs:
         run: dart run build_runner build --build-filter=lib/core/storage/db.g.dart
 
       - name: verify drift output exists
-        run: |
-          test -s lib/core/storage/db.g.dart
-          echo "--- head of db.g.dart ---"
-          head -n 8 lib/core/storage/db.g.dart
-          echo "--- row classes ---"
-          grep -n "class Chat \|class Message \|class Branch \|class ProviderConfig " lib/core/storage/db.g.dart
+        run: test -s lib/core/storage/db.g.dart
 
       - name: build_runner (full)
-        run: |
-          set +e
-          dart run build_runner build --verbose > build.log 2>&1
-          status=$?
-          grep -n -A 40 "InvalidTypeException" build.log || true
-          echo "build_runner exit: $status"
-          exit $status
+        run: dart run build_runner build
 
       - name: flutter analyze
         run: flutter analyze
