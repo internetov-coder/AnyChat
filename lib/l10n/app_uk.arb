@@ -4,13 +4,11 @@
   "navChats": "Чати",
   "navModels": "Моделі",
   "navSettings": "Налаштування",
-
   "chatsEmpty": "Чатів поки немає. Створіть новий, щоб почати.",
   "newChat": "Новий чат",
   "deleteChat": "Видалити чат",
   "renameChat": "Перейменувати",
   "chatNameLabel": "Назва чата",
-
   "messageInputHint": "Повідомлення…",
   "send": "Надіслати",
   "stop": "Стоп",
@@ -24,27 +22,27 @@
   "loading": "Завантаження…",
   "generating": "Генерація…",
   "emptyChatHint": "Надішліть перше повідомлення, щоб почати діалог.",
-
   "branchFromHere": "Гілка з цього повідомлення",
   "branches": "Гілки",
   "newBranch": "Нова гілка",
   "branchMain": "main",
   "editMessageTitle": "Змінити повідомлення",
   "editMessageHint": "Редагування створює нову гілку, оригінал зберігається.",
-
   "contextUsage": "{tokens} / {limit} токенів",
   "@contextUsage": {
     "placeholders": {
-      "tokens": { "type": "num" },
-      "limit": { "type": "num" }
+      "tokens": {
+        "type": "num"
+      },
+      "limit": {
+        "type": "num"
+      }
     }
   },
   "approximateLabel": "приблизно",
-
   "handoff": "Стиснути історію",
   "handoffPrompt": "Зроби коротке резюме діалогу: цілі, рішення, обмеження, наступні кроки.",
   "handoffDone": "Створено новий чат із резюме.",
-
   "modelsTitle": "Моделі",
   "searchModels": "Пошук моделей",
   "selectModel": "Обрати",
@@ -58,22 +56,27 @@
   "priceInput": "вхід {price} $ / 1M",
   "@priceInput": {
     "placeholders": {
-      "price": { "type": "String" }
+      "price": {
+        "type": "String"
+      }
     }
   },
   "priceOutput": "вихід {price} $ / 1M",
   "@priceOutput": {
     "placeholders": {
-      "price": { "type": "String" }
+      "price": {
+        "type": "String"
+      }
     }
   },
   "contextWindowLabel": "контекст {tokens} токенів",
   "@contextWindowLabel": {
     "placeholders": {
-      "tokens": { "type": "num" }
+      "tokens": {
+        "type": "num"
+      }
     }
   },
-
   "providersTitle": "Провайдер",
   "selectProvider": "Обрати провайдера",
   "providerSelected": "Провайдер обрано",
@@ -85,7 +88,9 @@
   "keySavedMasked": "Ключ збережено: {mask}",
   "@keySavedMasked": {
     "placeholders": {
-      "mask": { "type": "String" }
+      "mask": {
+        "type": "String"
+      }
     }
   },
   "keyRemoved": "Ключ видалено",
@@ -97,7 +102,6 @@
   "baseUrlHint": "Залиште порожнім, щоб використовувати адресу за замовчуванням.",
   "baseUrlReset": "Скинути",
   "keyMissing": "Спочатку збережіть API-ключ провайдера.",
-
   "settingsTitle": "Налаштування",
   "providerSection": "Провайдер і ключ",
   "generateSection": "Генерація",
@@ -115,12 +119,13 @@
   "debugLogEmpty": "Поки нічого не записано.",
   "openDebugLog": "Показати лог",
   "clearLog": "Очистити",
-
   "errAuth": "Невірний або протермінований API-ключ. Перевірте ключ у налаштуваннях провайдера.",
   "errRateLimit": "Забагато запитів. Зачекайте {retryAfter} секунд або змініть модель/провайдера.",
   "@errRateLimit": {
     "placeholders": {
-      "retryAfter": { "type": "num" }
+      "retryAfter": {
+        "type": "num"
+      }
     }
   },
   "errQuota": "Закінчилась квота на цьому ключі. Поповніть баланс у провайдера.",
@@ -129,7 +134,9 @@
   "errInvalidRequest": "Провайдер відхилив запит: {details}",
   "@errInvalidRequest": {
     "placeholders": {
-      "details": { "type": "String" }
+      "details": {
+        "type": "String"
+      }
     }
   },
   "errNetwork": "Немає з'єднання з провайдером. Перевірте інтернет.",
@@ -138,8 +145,11 @@
   "errUnknown": "Невідома помилка: {raw}. Спробуйте ще раз.",
   "@errUnknown": {
     "placeholders": {
-      "raw": { "type": "String" }
+      "raw": {
+        "type": "String"
+      }
     }
   },
-  "errNoModel": "Спочатку оберіть модель."
+  "errNoModel": "Спочатку оберіть модель.",
+  "errNoChat": "Чат не знайдено. Можливо, його видалено."
 }

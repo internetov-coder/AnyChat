@@ -4,13 +4,11 @@
   "navChats": "Chats",
   "navModels": "Models",
   "navSettings": "Settings",
-
   "chatsEmpty": "No chats yet. Create one to get started.",
   "newChat": "New chat",
   "deleteChat": "Delete chat",
   "renameChat": "Rename",
   "chatNameLabel": "Chat name",
-
   "messageInputHint": "Message…",
   "send": "Send",
   "stop": "Stop",
@@ -24,27 +22,27 @@
   "loading": "Loading…",
   "generating": "Generating…",
   "emptyChatHint": "Send your first message to start the conversation.",
-
   "branchFromHere": "Branch from here",
   "branches": "Branches",
   "newBranch": "New branch",
   "branchMain": "main",
   "editMessageTitle": "Edit message",
   "editMessageHint": "Editing creates a new branch; the original stays intact.",
-
   "contextUsage": "{tokens} / {limit} tokens",
   "@contextUsage": {
     "placeholders": {
-      "tokens": { "type": "num" },
-      "limit": { "type": "num" }
+      "tokens": {
+        "type": "num"
+      },
+      "limit": {
+        "type": "num"
+      }
     }
   },
   "approximateLabel": "approx.",
-
   "handoff": "Summarize history",
   "handoffPrompt": "Write a brief summary of this conversation: goals, decisions, constraints, next steps.",
   "handoffDone": "A new chat with the summary was created.",
-
   "modelsTitle": "Models",
   "searchModels": "Search models",
   "selectModel": "Select",
@@ -58,22 +56,27 @@
   "priceInput": "in {price} USD / 1M",
   "@priceInput": {
     "placeholders": {
-      "price": { "type": "String" }
+      "price": {
+        "type": "String"
+      }
     }
   },
   "priceOutput": "out {price} USD / 1M",
   "@priceOutput": {
     "placeholders": {
-      "price": { "type": "String" }
+      "price": {
+        "type": "String"
+      }
     }
   },
   "contextWindowLabel": "context {tokens} tokens",
   "@contextWindowLabel": {
     "placeholders": {
-      "tokens": { "type": "num" }
+      "tokens": {
+        "type": "num"
+      }
     }
   },
-
   "providersTitle": "Provider",
   "selectProvider": "Select provider",
   "providerSelected": "Provider selected",
@@ -85,7 +88,9 @@
   "keySavedMasked": "Key saved: {mask}",
   "@keySavedMasked": {
     "placeholders": {
-      "mask": { "type": "String" }
+      "mask": {
+        "type": "String"
+      }
     }
   },
   "keyRemoved": "Key removed",
@@ -97,7 +102,6 @@
   "baseUrlHint": "Leave empty for the default URL.",
   "baseUrlReset": "Reset",
   "keyMissing": "Save the provider API key first.",
-
   "settingsTitle": "Settings",
   "providerSection": "Provider & key",
   "generateSection": "Generation",
@@ -115,12 +119,13 @@
   "debugLogEmpty": "Nothing logged yet.",
   "openDebugLog": "Show log",
   "clearLog": "Clear",
-
   "errAuth": "Invalid or expired API key. Check the key in the provider settings.",
   "errRateLimit": "Too many requests. Wait {retryAfter} seconds or switch model/provider.",
   "@errRateLimit": {
     "placeholders": {
-      "retryAfter": { "type": "num" }
+      "retryAfter": {
+        "type": "num"
+      }
     }
   },
   "errQuota": "Quota on this key is exhausted. Top up your balance with the provider.",
@@ -129,7 +134,9 @@
   "errInvalidRequest": "The provider rejected the request: {details}",
   "@errInvalidRequest": {
     "placeholders": {
-      "details": { "type": "String" }
+      "details": {
+        "type": "String"
+      }
     }
   },
   "errNetwork": "No connection to the provider. Check your internet.",
@@ -138,8 +145,11 @@
   "errUnknown": "Unknown error: {raw}. Try again.",
   "@errUnknown": {
     "placeholders": {
-      "raw": { "type": "String" }
+      "raw": {
+        "type": "String"
+      }
     }
   },
-  "errNoModel": "Select a model first."
+  "errNoModel": "Select a model first.",
+  "errNoChat": "Chat not found. It may have been deleted."
 }

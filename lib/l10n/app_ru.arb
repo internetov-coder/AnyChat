@@ -4,13 +4,11 @@
   "navChats": "Чаты",
   "navModels": "Модели",
   "navSettings": "Настройки",
-
   "chatsEmpty": "Чатов пока нет. Создайте новый, чтобы начать.",
   "newChat": "Новый чат",
   "deleteChat": "Удалить чат",
   "renameChat": "Переименовать",
   "chatNameLabel": "Название чата",
-
   "messageInputHint": "Сообщение…",
   "send": "Отправить",
   "stop": "Стоп",
@@ -24,27 +22,27 @@
   "loading": "Загрузка…",
   "generating": "Генерация…",
   "emptyChatHint": "Отправьте первое сообщение, чтобы начать диалог.",
-
   "branchFromHere": "Ветка с этого сообщения",
   "branches": "Ветки",
   "newBranch": "Новая ветка",
   "branchMain": "main",
   "editMessageTitle": "Изменить сообщение",
   "editMessageHint": "Правка создаёт новую ветку, исходная остаётся.",
-
   "contextUsage": "{tokens} / {limit} токенов",
   "@contextUsage": {
     "placeholders": {
-      "tokens": { "type": "num" },
-      "limit": { "type": "num" }
+      "tokens": {
+        "type": "num"
+      },
+      "limit": {
+        "type": "num"
+      }
     }
   },
   "approximateLabel": "приблизительно",
-
   "handoff": "Сжать историю",
   "handoffPrompt": "Сделай краткое резюме диалога: цели, решения, ограничения, следующие шаги.",
   "handoffDone": "Создан новый чат с резюме.",
-
   "modelsTitle": "Модели",
   "searchModels": "Поиск моделей",
   "selectModel": "Выбрать",
@@ -58,22 +56,27 @@
   "priceInput": "вход {price} $ / 1M",
   "@priceInput": {
     "placeholders": {
-      "price": { "type": "String" }
+      "price": {
+        "type": "String"
+      }
     }
   },
   "priceOutput": "выход {price} $ / 1M",
   "@priceOutput": {
     "placeholders": {
-      "price": { "type": "String" }
+      "price": {
+        "type": "String"
+      }
     }
   },
   "contextWindowLabel": "контекст {tokens} токенов",
   "@contextWindowLabel": {
     "placeholders": {
-      "tokens": { "type": "num" }
+      "tokens": {
+        "type": "num"
+      }
     }
   },
-
   "providersTitle": "Провайдер",
   "selectProvider": "Выбрать провайдера",
   "providerSelected": "Провайдер выбран",
@@ -85,7 +88,9 @@
   "keySavedMasked": "Ключ сохранён: {mask}",
   "@keySavedMasked": {
     "placeholders": {
-      "mask": { "type": "String" }
+      "mask": {
+        "type": "String"
+      }
     }
   },
   "keyRemoved": "Ключ удалён",
@@ -97,7 +102,6 @@
   "baseUrlHint": "Оставьте пустым, чтобы использовать адрес по умолчанию.",
   "baseUrlReset": "Сбросить",
   "keyMissing": "Сначала сохраните API-ключ провайдера.",
-
   "settingsTitle": "Настройки",
   "providerSection": "Провайдер и ключ",
   "generateSection": "Генерация",
@@ -115,12 +119,13 @@
   "debugLogEmpty": "Пока ничего не записано.",
   "openDebugLog": "Показать лог",
   "clearLog": "Очистить",
-
   "errAuth": "Неверный или просроченный API-ключ. Проверьте ключ в настройках провайдера.",
   "errRateLimit": "Слишком много запросов. Подождите {retryAfter} секунд или смените модель/провайдера.",
   "@errRateLimit": {
     "placeholders": {
-      "retryAfter": { "type": "num" }
+      "retryAfter": {
+        "type": "num"
+      }
     }
   },
   "errQuota": "Закончилась квота на этом ключе. Пополните баланс у провайдера.",
@@ -129,7 +134,9 @@
   "errInvalidRequest": "Провайдер отклонил запрос: {details}",
   "@errInvalidRequest": {
     "placeholders": {
-      "details": { "type": "String" }
+      "details": {
+        "type": "String"
+      }
     }
   },
   "errNetwork": "Нет соединения с провайдером. Проверьте интернет.",
@@ -138,8 +145,11 @@
   "errUnknown": "Неизвестная ошибка: {raw}. Попробуйте ещё раз.",
   "@errUnknown": {
     "placeholders": {
-      "raw": { "type": "String" }
+      "raw": {
+        "type": "String"
+      }
     }
   },
-  "errNoModel": "Сначала выберите модель."
+  "errNoModel": "Сначала выберите модель.",
+  "errNoChat": "Чат не найден. Возможно, он был удалён."
 }

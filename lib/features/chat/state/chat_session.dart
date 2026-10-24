@@ -1,0 +1,424 @@
+import 'package:dio/dio.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../../app_providers.dart';
+import '../../../core/errors/api_error.dart';
+import '../../../core/errors/debug_log.dart';
+import '../../../features/providers/data/provider_adapter.dart';
+import '../../../features/providers/domain/provider_registry.dart';
+import '../../settings/app_settings.dart';
+import '../../settings/state/settings_controller.dart';
+import '../data/chat_repository.dart';
+import '../data/message_repository.dart';
+import '../domain/models.dart';
+
+part 'chat_session.g.dart';
+
+/// Pre-flight failures the UI has to localize itself.
+enum ChatIssue { noKey, noModel, noChat }
+
+/// Live state of the chat screen: streaming buffer, busy flags and the last
+/// failure (localized by the widget layer via [ChatSessionState.lastIssue] or
+/// `localizeApiError`).
+class ChatSessionState {
+  const ChatSessionState({
+    this.isStreaming = false,
+    this.streamingChatId,
+    this.streamingMessageId,
+    this.streamText = '',
+    this.busy = false,
+    this.lastError,
+    this.lastIssue,
+  });
+
+  final bool isStreaming;
+  final int? streamingChatId;
+  final int? streamingMessageId;
+  final String streamText;
+  final bool busy;
+  final ApiError? lastError;
+  final ChatIssue? lastIssue;
+
+  bool get hasFailure => lastError != null || lastIssue != null;
+}
+
+class _Session {
+  const _Session({
+    required this.chat,
+    required this.branchId,
+    required this.settings,
+    required this.adapter,
+    required this.apiKey,
+    required this.baseUrl,
+    required this.model,
+  });
+
+  final Chat chat;
+  final int branchId;
+  final AppSettings settings;
+  final ProviderAdapter adapter;
+  final String apiKey;
+  final String baseUrl;
+  final String model;
+
+  _Session withBranch(int branchId) => _Session(
+        chat: chat,
+        branchId: branchId,
+        settings: settings,
+        adapter: adapter,
+        apiKey: apiKey,
+        baseUrl: baseUrl,
+        model: model,
+      );
+}
+
+/// Coordinates sending, streaming, branching and history handoff.
+///
+/// Keep-alive so an in-flight generation survives navigation.
+@Riverpod(keepAlive: true)
+class ChatSession extends _$ChatSession {
+  CancelToken? _token;
+
+  @override
+  ChatSessionState build() => const ChatSessionState();
+
+  // ---------------------------------------------------------------- public
+
+  Future<void> send(int chatId, String text) async {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty || state.isStreaming || state.busy) return;
+    state = const ChatSessionState();
+
+    final session = await _openSession(chatId);
+    if (session == null) return;
+
+    final repo = ref.read(messageRepositoryProvider);
+    final history = await repo.messagesInBranch(session.branchId);
+    final isFirstUserMessage = !history.any((m) => m.role == 'user');
+    await repo.insertMessage(
+      chatId: chatId,
+      branchId: session.branchId,
+      role: 'user',
+      content: trimmed,
+    );
+    if (isFirstUserMessage) {
+      await ref
+          .read(chatRepositoryProvider)
+          .renameChat(chatId, deriveChatTitle(trimmed));
+    }
+
+    final fresh = await repo.messagesInBranch(session.branchId);
+    await _generate(session: session, turns: _historyTurns(session, fresh));
+  }
+
+  /// Stops the in-flight generation, keeping whatever was produced so far.
+  void stop() {
+    final token = _token;
+    if (token != null && !token.isCancelled) {
+      token.cancel();
+    }
+  }
+
+  Future<void> regenerate(int chatId) async {
+    if (state.isStreaming || state.busy) return;
+    state = const ChatSessionState();
+    final session = await _openSession(chatId);
+    if (session == null) return;
+    try {
+      final repo = ref.read(messageRepositoryProvider);
+      var history = await repo.messagesInBranch(session.branchId);
+      if (history.isNotEmpty && history.last.role == 'assistant') {
+        await repo.deleteMessage(history.last.id);
+        history = history.sublist(0, history.length - 1);
+      }
+      if (history.isEmpty) return;
+      await _generate(session: session, turns: _historyTurns(session, history));
+    } catch (e) {
+      _setUnknownFailure(e);
+    }
+  }
+
+  /// Copies every message up to [messageId] into a new branch (rollback).
+  Future<int?> branchFrom(int chatId, int messageId) async {
+    if (state.isStreaming || state.busy) return null;
+    state = const ChatSessionState();
+    final session = await _openSession(chatId);
+    if (session == null) return null;
+    try {
+      final chatRepo = ref.read(chatRepositoryProvider);
+      final branches = await chatRepo.getBranches(chatId);
+      return await chatRepo.forkBranchFrom(
+        chatId: chatId,
+        sourceBranchId: session.branchId,
+        messageId: messageId,
+        name: 'v${branches.length + 1}',
+      );
+    } catch (e) {
+      _setUnknownFailure(e);
+      return null;
+    }
+  }
+
+  /// Edits a user message in a *new* branch and regenerates the reply.
+  Future<void> editMessage(int chatId, int messageId, String newText) async {
+    final trimmed = newText.trim();
+    if (trimmed.isEmpty || state.isStreaming || state.busy) return;
+    state = const ChatSessionState();
+    final session = await _openSession(chatId);
+    if (session == null) return;
+    try {
+      final chatRepo = ref.read(chatRepositoryProvider);
+      final msgRepo = ref.read(messageRepositoryProvider);
+      final branches = await chatRepo.getBranches(chatId);
+      final newBranchId = await chatRepo.forkBranchBefore(
+        chatId: chatId,
+        sourceBranchId: session.branchId,
+        messageId: messageId,
+        name: 'v${branches.length + 1}',
+      );
+      await msgRepo.insertMessage(
+        chatId: chatId,
+        branchId: newBranchId,
+        role: 'user',
+        content: trimmed,
+      );
+      final history = await msgRepo.messagesInBranch(newBranchId);
+      final newSession = session.withBranch(newBranchId);
+      await _generate(session: newSession, turns: _historyTurns(newSession, history));
+    } catch (e) {
+      _setUnknownFailure(e);
+    }
+  }
+
+  Future<void> switchBranch(int chatId, int branchId) async {
+    if (state.isStreaming || state.busy) return;
+    state = const ChatSessionState();
+    await ref.read(chatRepositoryProvider).setActiveBranch(chatId, branchId);
+  }
+
+  /// Asks the model to summarize the conversation, stores the answer as the
+  /// system message of a brand-new chat and returns its id.
+  Future<int?> summarize(int chatId, {required String prompt}) async {
+    if (state.isStreaming || state.busy) return null;
+    final trimmedPrompt = prompt.trim();
+    if (trimmedPrompt.isEmpty) return null;
+    state = const ChatSessionState();
+
+    final session = await _openSession(chatId);
+    if (session == null) return null;
+
+    final msgRepo = ref.read(messageRepositoryProvider);
+    final history = await msgRepo.messagesInBranch(session.branchId);
+    if (history.isEmpty) return null;
+
+    state = const ChatSessionState(busy: true);
+    final token = CancelToken();
+    _token = token;
+    try {
+      final turns = <ChatTurn>[
+        ..._historyTurns(session, history),
+        ChatTurn(role: 'user', content: trimmedPrompt),
+      ];
+      final params = ChatParams(
+        apiKey: session.apiKey,
+        baseUrl: session.baseUrl,
+        model: session.model,
+        turns: turns,
+        temperature: session.settings.temperature,
+        maxTokens: session.settings.maxTokens,
+        timeout: Duration(seconds: session.settings.timeoutSeconds),
+      );
+      final buffer = StringBuffer();
+      await for (final delta
+          in session.adapter.streamChat(params, cancelToken: token)) {
+        buffer.write(delta);
+      }
+      final summary = buffer.toString().trim();
+      if (summary.isEmpty) {
+        state = const ChatSessionState();
+        return null;
+      }
+      final chatRepo = ref.read(chatRepositoryProvider);
+      final created = await chatRepo.createChat(
+        title: deriveChatTitle(summary),
+      );
+      await msgRepo.insertMessage(
+        chatId: created.chatId,
+        branchId: created.branchId,
+        role: 'system',
+        content: summary,
+      );
+      state = const ChatSessionState();
+      return created.chatId;
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.cancel) {
+        state = const ChatSessionState();
+        return null;
+      }
+      final error = ApiError.fromDio(e, session.adapter.format);
+      ref.read(debugLogProvider.notifier).add(error);
+      state = ChatSessionState(lastError: error);
+      return null;
+    } on ApiError catch (error) {
+      ref.read(debugLogProvider.notifier).add(error);
+      state = ChatSessionState(lastError: error);
+      return null;
+    } catch (e) {
+      _setUnknownFailure(e);
+      return null;
+    } finally {
+      _token = null;
+    }
+  }
+
+  // --------------------------------------------------------------- private
+
+  Future<_Session?> _openSession(int chatId) async {
+    final chatRepo = ref.read(chatRepositoryProvider);
+    final chat = await chatRepo.getChat(chatId);
+    if (chat == null) {
+      state = const ChatSessionState(lastIssue: ChatIssue.noChat);
+      return null;
+    }
+    final branchId = await chatRepo.ensureActiveBranch(chatId, chat);
+
+    final settings = await ref.read(settingsControllerProvider.future);
+    final provider = findProvider(settings.selectedProviderId);
+    final model = settings.selectedModelId ?? provider.defaultModel;
+    if (model.trim().isEmpty) {
+      state = const ChatSessionState(lastIssue: ChatIssue.noModel);
+      return null;
+    }
+    final key = await ref.read(keyStoreProvider).readKey(provider.id);
+    if (key == null || key.trim().isEmpty) {
+      state = const ChatSessionState(lastIssue: ChatIssue.noKey);
+      return null;
+    }
+    final baseUrl =
+        await ref.read(providerConfigRepositoryProvider).baseUrlOverride(provider.id) ??
+            provider.baseUrl;
+    return _Session(
+      chat: chat,
+      branchId: branchId,
+      settings: settings,
+      adapter: adapterFor(provider.format),
+      apiKey: key.trim(),
+      baseUrl: baseUrl,
+      model: model,
+    );
+  }
+
+  ChatTurn? _systemTurnFor(_Session session) {
+    final chatPrompt = session.chat.systemPrompt;
+    final source = (chatPrompt != null && chatPrompt.trim().isNotEmpty)
+        ? chatPrompt
+        : session.settings.systemPrompt;
+    final trimmed = source.trim();
+    return trimmed.isEmpty ? null : ChatTurn(role: 'system', content: trimmed);
+  }
+
+  List<ChatTurn> _historyTurns(_Session session, List<Message> history) {
+    final system = _systemTurnFor(session);
+    return <ChatTurn>[
+      if (system != null) system,
+      for (final message in history)
+        if ((message.role == 'user' || message.role == 'assistant') &&
+            message.content.trim().isNotEmpty)
+          ChatTurn(role: message.role, content: message.content),
+    ];
+  }
+
+  Future<void> _generate({
+    required _Session session,
+    required List<ChatTurn> turns,
+  }) async {
+    if (turns.isEmpty) return;
+    final repo = ref.read(messageRepositoryProvider);
+    final assistantId = await repo.insertMessage(
+      chatId: session.chat.id,
+      branchId: session.branchId,
+      role: 'assistant',
+      content: '',
+      model: session.model,
+    );
+
+    state = ChatSessionState(
+      isStreaming: true,
+      streamingChatId: session.chat.id,
+      streamingMessageId: assistantId,
+    );
+
+    final params = ChatParams(
+      apiKey: session.apiKey,
+      baseUrl: session.baseUrl,
+      model: session.model,
+      turns: turns,
+      temperature: session.settings.temperature,
+      maxTokens: session.settings.maxTokens,
+      timeout: Duration(seconds: session.settings.timeoutSeconds),
+    );
+
+    final token = CancelToken();
+    _token = token;
+    final buffer = StringBuffer();
+    try {
+      await for (final delta
+          in session.adapter.streamChat(params, cancelToken: token)) {
+        buffer.write(delta);
+        state = ChatSessionState(
+          isStreaming: true,
+          streamingChatId: session.chat.id,
+          streamingMessageId: assistantId,
+          streamText: buffer.toString(),
+        );
+      }
+      await repo.setContent(assistantId, buffer.toString());
+      state = const ChatSessionState();
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.cancel) {
+        await repo.setContent(assistantId, buffer.toString());
+        state = const ChatSessionState();
+      } else {
+        final error = ApiError.fromDio(e, session.adapter.format);
+        await _recordFailure(repo, assistantId, buffer.toString(), error);
+      }
+    } on ApiError catch (error) {
+      await _recordFailure(repo, assistantId, buffer.toString(), error);
+    } catch (e) {
+      final error = ApiError(
+        type: ApiErrorType.unknown,
+        raw: '$e',
+        cause: e,
+      );
+      await _recordFailure(repo, assistantId, buffer.toString(), error);
+    } finally {
+      _token = null;
+    }
+  }
+
+  Future<void> _recordFailure(
+    MessageRepository repo,
+    int messageId,
+    String content,
+    ApiError error,
+  ) async {
+    await repo.setContent(messageId, content);
+    await repo.setError(
+      messageId,
+      errorType: error.type.name,
+      errorDetails: error.details,
+    );
+    ref.read(debugLogProvider.notifier).add(error);
+    state = ChatSessionState(lastError: error);
+  }
+
+  void _setUnknownFailure(Object cause) {
+    final error = ApiError(
+      type: ApiErrorType.unknown,
+      raw: '$cause',
+      cause: cause,
+    );
+    ref.read(debugLogProvider.notifier).add(error);
+    state = ChatSessionState(lastError: error);
+  }
+}
