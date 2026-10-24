@@ -1,0 +1,35 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+.idea/
+*.iml
+.vscode/
+
+# Generated code (build_runner + gen-l10n)
+*.g.dart
+lib/l10n/app_localizations*.dart
+
+# Android
+android/local.properties
+android/.gradle/
+android/app/.cxx/
+android/captures/
+*.keystore
+*.jks
+key.properties
+
+# Secrets / env
+.env
+.env.*
+*.pem
+
+# Misc
+*.log
+.DS_Store
+coverage/
