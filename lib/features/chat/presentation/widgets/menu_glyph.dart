@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// ChatGPT-style two-line menu glyph used by the floating hamburger button.
 class MenuGlyph extends StatelessWidget {
   const MenuGlyph({super.key, this.size = 20, this.color});
 
-  /// Width of the glyph; height follows the 20:14 aspect ratio.
   final double size;
   final Color? color;
 

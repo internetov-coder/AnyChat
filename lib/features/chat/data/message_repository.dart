@@ -3,14 +3,11 @@ import 'package:drift/drift.dart';
 import '../../../core/storage/db.dart';
 import '../domain/models.dart' as dm;
 
-/// Message persistence for a single chat (branches included).
 class MessageRepository {
   MessageRepository(this._db);
 
   final AppDatabase _db;
 
-  /// All messages of a chat across branches, ordered chronologically.
-  /// The UI filters them by the active branch.
   Stream<List<dm.Message>> watchMessages(int chatId) {
     final query = _db.select(_db.messages)
       ..where((t) => t.chatId.equals(chatId))
@@ -18,7 +15,6 @@ class MessageRepository {
     return query.watch().map((rows) => rows.map(dm.Message.fromRow).toList());
   }
 
-  /// Messages of one branch in chronological order.
   Future<List<dm.Message>> messagesInBranch(int branchId) {
     final query = _db.select(_db.messages)
       ..where((t) => t.branchId.equals(branchId))

@@ -5,10 +5,6 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../settings/app_settings.dart';
 import '../../domain/models.dart';
 
-/// Shared context statistics for the circle indicator and its dialog.
-///
-/// Returns `(used, limit, approximate)` for the current settings and the
-/// messages of the active branch.
 ({int used, int limit, bool approximate}) computeContextUsage(
   AppSettings settings,
   List<Message> messages,
@@ -29,15 +25,12 @@ import '../../domain/models.dart';
   return (used: used, limit: limit, approximate: approximate);
 }
 
-/// Green / amber / red status color for a context fill ratio.
 Color contextStatusColor(double ratio) {
   if (ratio < 0.6) return const Color(0xFF2E7D32);
   if (ratio <= 0.85) return const Color(0xFFF9A825);
   return const Color(0xFFE53935);
 }
 
-/// Donut above the composer showing how full the context window is.
-/// Tapping opens the detailed statistics dialog (handled by the parent).
 class ContextCircle extends StatelessWidget {
   const ContextCircle({
     super.key,
@@ -122,7 +115,7 @@ class _DonutPainter extends CustomPainter {
       ..color = color;
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
-      -1.5708, // -90°, start at the top
+      -1.5708,
       ratio * 6.2832,
       false,
       arc,

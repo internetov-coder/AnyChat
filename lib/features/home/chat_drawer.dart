@@ -9,8 +9,6 @@ import '../chat/state/chat_providers.dart';
 import '../chat/state/chat_session.dart';
 import '../chat/state/current_chat.dart';
 
-/// Left drawer in the ChatGPT layout: brand header with a new-chat button,
-/// the recent chats list and a footer row (new-chat pill + settings).
 class ChatDrawer extends ConsumerWidget {
   const ChatDrawer({super.key});
 
@@ -222,7 +220,6 @@ class ChatDrawer extends ConsumerWidget {
     await ref.read(chatRepositoryProvider).renameChat(chat.id, title);
   }
 
-  /// Handoff: asks the model for a summary and opens a new chat with it.
   Future<void> _summarizeChat(
     BuildContext context,
     WidgetRef ref,

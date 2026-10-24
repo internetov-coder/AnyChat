@@ -3,7 +3,6 @@ import 'package:drift/drift.dart';
 import '../../../core/storage/db.dart';
 import '../domain/models.dart' as dm;
 
-/// Chat and branch persistence (including branch forking).
 class ChatRepository {
   ChatRepository(this._db);
 
@@ -29,7 +28,6 @@ class ChatRepository {
         .then((row) => row == null ? null : dm.Chat.fromRow(row));
   }
 
-  /// Creates the chat with its initial `main` branch and returns both ids.
   Future<({int chatId, int branchId})> createChat({
     required String title,
     String? systemPrompt,
@@ -71,7 +69,6 @@ class ChatRepository {
     });
   }
 
-  /// Replaces the cumulative usage counters of a chat.
   Future<void> setUsage(
     int chatId, {
     required int input,
@@ -92,7 +89,6 @@ class ChatRepository {
         .write(ChatsCompanion(activeBranchId: Value(branchId)));
   }
 
-  /// Creates a missing active branch (self-healing for legacy rows).
   Future<int> ensureActiveBranch(int chatId, dm.Chat chat) async {
     final existing = chat.activeBranchId;
     if (existing != null) return existing;
@@ -117,8 +113,6 @@ class ChatRepository {
     return query.get().then((rows) => rows.map(dm.Branch.fromRow).toList());
   }
 
-  /// Copies the source branch up to and including [messageId] into a new
-  /// branch and activates it (rollback / "branch from here").
   Future<int> forkBranchFrom({
     required int chatId,
     required int sourceBranchId,
@@ -134,8 +128,6 @@ class ChatRepository {
     );
   }
 
-  /// Copies only the messages *before* [messageId] into a new branch (used
-  /// when the user edits a message) and activates it.
   Future<int> forkBranchBefore({
     required int chatId,
     required int sourceBranchId,

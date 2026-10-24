@@ -3,7 +3,6 @@ import '../../../core/network/api_format.dart';
 import '../domain/model_info.dart';
 import 'provider_adapter.dart';
 
-/// Google Gemini `streamGenerateContent?alt=sse` (key passed as query param).
 class GeminiAdapter extends ProviderAdapter {
   @override
   ApiFormat get format => ApiFormat.gemini;
@@ -47,7 +46,6 @@ class GeminiAdapter extends ProviderAdapter {
     );
   }
 
-  /// Gemini takes any media as `inlineData` parts alongside the text.
   static List<Map<String, dynamic>> _partsFor(ChatTurn turn) {
     final parts = <Map<String, dynamic>>[];
     if (turn.content.isNotEmpty) {

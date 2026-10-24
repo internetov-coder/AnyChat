@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/errors/api_error.dart';
 import '../../../../core/errors/error_localizer.dart';
 import '../../domain/models.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'attachment_view.dart';
+import 'code_block.dart';
 
-/// A single message row (ChatGPT style).
-///
-/// The user's message is a rounded `primaryContainer` bubble that hugs its
-/// text; assistant/system replies are plain Markdown on the background.
-/// Action icons live *outside* the bubble, underneath it, so a short
-/// message never produces an oversized bubble.
 class MessageBubble extends StatelessWidget {
   const MessageBubble({
     super.key,
@@ -48,8 +44,7 @@ class MessageBubble extends StatelessWidget {
         ? null
         : ApiError.fromStored(storedError, details: message.errorDetails);
 
-    final showCopy =
-        isLast && !isStreaming && message.content.trim().isNotEmpty;
+    final showCopy = !isStreaming && message.content.trim().isNotEmpty;
     final showBranch = onBranch != null && isLast;
     final hasActions = showCopy ||
         onEdit != null ||
@@ -115,7 +110,6 @@ class MessageBubble extends StatelessWidget {
       ],
     ];
 
-    // The bubble only wraps the message itself: short text -> small bubble.
     final Widget bubble;
     if (isUser) {
       bubble = Container(
@@ -226,9 +220,6 @@ class MessageBubble extends StatelessWidget {
   }
 }
 
-/// Message text: plain selectable text for the user's own messages and
-/// rendered Markdown for assistant (and system) replies, with a live
-/// cursor while the answer is still streaming.
 class _MessageBody extends StatelessWidget {
   const _MessageBody({
     required this.content,
@@ -247,28 +238,48 @@ class _MessageBody extends StatelessWidget {
     }
     final theme = Theme.of(context);
     final data = streaming ? '$content▌' : content;
-    return MarkdownBody(
-      data: data,
-      styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
-        p: theme.textTheme.bodyMedium,
-        code: theme.textTheme.bodySmall?.copyWith(
-          fontFamily: 'monospace',
-          backgroundColor: theme.colorScheme.surfaceContainerHighest,
-        ),
-        codeblockDecoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        blockquoteDecoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHigh,
-          border: Border(
-            left: BorderSide(
-              color: theme.colorScheme.outline,
-              width: 3,
+    return SelectionArea(
+      child: MarkdownBody(
+        data: data,
+        onTapLink: (String text, String? href, String title) =>
+            _openLink(context, href),
+        builders: const <String, MarkdownElementBuilder>{
+          'pre': CodeBlockBuilder(),
+        },
+        styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
+          p: theme.textTheme.bodyMedium,
+          code: theme.textTheme.bodySmall?.copyWith(
+            fontFamily: 'monospace',
+            backgroundColor: theme.colorScheme.surfaceContainerHighest,
+          ),
+          codeblockDecoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          blockquoteDecoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHigh,
+            border: Border(
+              left: BorderSide(
+                color: theme.colorScheme.outline,
+                width: 3,
+              ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  static Future<void> _openLink(BuildContext context, String? href) async {
+    if (href == null || href.isEmpty) return;
+    final uri = Uri.tryParse(href);
+    if (uri == null || !uri.hasScheme) return;
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && context.mounted) {
+      final l10n = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.errUnknown(href))),
+      );
+    }
   }
 }

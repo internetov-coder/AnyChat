@@ -7,10 +7,6 @@ import '../../domain/models.dart';
 
 final Map<String, MemoryImage> _imageCache = <String, MemoryImage>{};
 
-/// Decoded (and cached) preview image for a base64 attachment.
-///
-/// The cache matters because chat lists rebuild on every streamed token —
-/// decoding a photo on each rebuild would jank the stream.
 MemoryImage? _imageFor(ChatAttachment attachment) {
   final cached = _imageCache[attachment.data];
   if (cached != null) return cached;
@@ -33,8 +29,6 @@ IconData iconForAttachment(ChatAttachment attachment) {
   return Icons.attach_file;
 }
 
-/// Attachment tile used inside message bubbles: a 96px image preview or a
-/// compact file card for video/audio.
 class AttachmentPreview extends StatelessWidget {
   const AttachmentPreview({super.key, required this.attachment});
 
@@ -86,7 +80,6 @@ class AttachmentPreview extends StatelessWidget {
   }
 }
 
-/// Detachable chip shown above the composer.
 class AttachmentChip extends StatelessWidget {
   const AttachmentChip({
     super.key,

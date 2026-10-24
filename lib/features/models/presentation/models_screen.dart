@@ -10,8 +10,6 @@ import '../../providers/state/providers_state.dart';
 import '../../settings/app_settings.dart';
 import '../../settings/state/settings_controller.dart';
 
-/// Model picker for the selected provider: search, prices, context window and
-/// a manual "custom model id" escape hatch.
 class ModelsScreen extends ConsumerStatefulWidget {
   const ModelsScreen({super.key});
 
@@ -212,7 +210,6 @@ class _ModelsScreenState extends ConsumerState<ModelsScreen> {
   }
 }
 
-/// Compact `128.0K ctx · $0.15/$0.60 per 1M` line for the model tile.
 String _metaLine(ModelInfo model) {
   final parts = <String>[];
   final window = model.contextWindow;

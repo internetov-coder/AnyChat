@@ -4,7 +4,6 @@ import '../../../core/network/api_format.dart';
 import '../../../core/storage/db.dart';
 import '../domain/custom_provider.dart';
 
-/// CRUD for user-defined providers. API keys are never stored here.
 class ProviderConfigRepository {
   ProviderConfigRepository(this._db);
 
@@ -25,7 +24,6 @@ class ProviderConfigRepository {
     return row == null ? null : CustomProvider.fromRow(row);
   }
 
-  /// Creates a provider; the id is used as the secure-storage key suffix.
   Future<CustomProvider> create({
     required String name,
     required String baseUrl,

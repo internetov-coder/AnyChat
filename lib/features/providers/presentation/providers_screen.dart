@@ -13,8 +13,6 @@ import '../data/provider_adapter.dart';
 import '../domain/custom_provider.dart';
 import '../state/providers_state.dart';
 
-/// User-defined providers: a list of saved endpoints with a "+" to add a new
-/// one (name, endpoint, format, API key).
 class ProvidersScreen extends ConsumerWidget {
   const ProvidersScreen({super.key});
 
@@ -136,8 +134,6 @@ class ProvidersScreen extends ConsumerWidget {
     );
   }
 
-  /// Minimal completion probe: validates the key with the same wire format
-  /// the provider uses in chats (uses the selected or first catalog model).
   Future<void> _checkProvider(
     WidgetRef ref,
     BuildContext context,
@@ -242,7 +238,6 @@ class ProvidersScreen extends ConsumerWidget {
   }
 }
 
-/// Create/edit dialog: name, endpoint (Base URL), wire format, API key.
 class _ProviderEditor extends ConsumerStatefulWidget {
   const _ProviderEditor({this.existing});
 

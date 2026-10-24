@@ -3,9 +3,7 @@ import '../../../core/network/api_format.dart';
 import '../domain/model_info.dart';
 import 'provider_adapter.dart';
 
-/// Anthropic Messages API (`/messages`, `x-api-key`, SSE events).
 class AnthropicAdapter extends ProviderAdapter {
-  /// Streamed error payloads carry a kind instead of an HTTP status.
   static const Map<String, int> _errorStatus = <String, int>{
     'rate_limit_error': 429,
     'authentication_error': 401,
@@ -45,8 +43,6 @@ class AnthropicAdapter extends ProviderAdapter {
     );
   }
 
-  /// Anthropic accepts images as base64 content parts; text-only turns keep
-  /// the plain string form.
   static Map<String, dynamic> _messageFor(ChatTurn turn) {
     if (turn.attachments.isEmpty) {
       return <String, String>{'role': turn.role, 'content': turn.content};

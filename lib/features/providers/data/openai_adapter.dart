@@ -4,7 +4,6 @@ import '../../../core/network/api_format.dart';
 import '../domain/model_info.dart';
 import 'provider_adapter.dart';
 
-/// OpenAI-compatible chat completions (`/chat/completions`, SSE `data:`).
 class OpenAIAdapter extends ProviderAdapter {
   @override
   ApiFormat get format => ApiFormat.openai;
@@ -30,8 +29,6 @@ class OpenAIAdapter extends ProviderAdapter {
     );
   }
 
-  /// Text-only turns keep a plain string body; turns with attachments use a
-  /// content part array (OpenAI multimodal format).
   static Map<String, dynamic> _messageFor(ChatTurn turn) {
     if (turn.attachments.isEmpty) {
       return <String, String>{'role': turn.role, 'content': turn.content};
@@ -137,9 +134,6 @@ class OpenAIAdapter extends ProviderAdapter {
     return result;
   }
 
-  /// Reads input modalities from the catalog payloads we know about:
-  /// Vercel AI Gateway (`modalities.input`) and OpenRouter
-  /// (`architecture.input_modalities`).
   static Set<ModelModality> _declaredModalities(Map item) {
     final out = <ModelModality>{};
     void addAll(Object? values) {
@@ -171,9 +165,6 @@ class OpenAIAdapter extends ProviderAdapter {
     return out;
   }
 
-  /// Thinking levels from the catalogs we know about:
-  /// Vercel `reasoning_options: [{type: effort, values: [...]}]` and
-  /// OpenRouter `reasoning: {supported_efforts: [...]}`.
   static List<String> _reasoningEfforts(Map item) {
     final out = <String>[];
     void addAll(Object? values) {

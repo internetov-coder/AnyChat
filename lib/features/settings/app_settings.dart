@@ -2,9 +2,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../providers/domain/model_info.dart';
 
-/// Global app settings (generation params, UI preferences, selected model).
-///
-/// Persisted with `shared_preferences`; API keys are *not* part of this class.
 class AppSettings {
   const AppSettings({
     this.themeMode = 'system',
@@ -36,23 +33,16 @@ class AppSettings {
   final int timeoutSeconds;
   final String systemPrompt;
 
-  /// OpenAI-only repetition penalty.
   final double frequencyPenalty;
 
-  /// Gemini-only candidate count; `null` = do not send.
   final int? topK;
 
-  /// Manual context-window override (tokens) for the context bar;
-  /// `null` = use the model metadata (or 128k approx).
   final int? contextLimit;
 
-  /// Send only the last N messages of the history; `null` = everything.
   final int? historyDepth;
 
-  /// Accent seed from `kAccentColors`; `'system'` = dynamic color / default.
   final String accentColor;
 
-  /// `''` (not sent), `low`, `medium` or `high` - OpenAI reasoning effort.
   final String reasoningEffort;
   final String selectedProviderId;
   final String? selectedModelId;
@@ -61,10 +51,8 @@ class AppSettings {
   final double? modelInputPricePerM;
   final double? modelOutputPricePerM;
 
-  /// Media inputs the selected model supports (drives the attach button).
   final Set<ModelModality> modelModalities;
 
-  /// Thinking levels advertised by the catalog for the selected model.
   final List<String> modelReasoningEfforts;
 
   factory AppSettings.fromPrefs(SharedPreferences prefs) {
@@ -169,7 +157,6 @@ class AppSettings {
     );
   }
 
-  /// Drops the model selection (used when the provider changes).
   AppSettings withoutModel() {
     return copyWith(
       selectedModelId: null,

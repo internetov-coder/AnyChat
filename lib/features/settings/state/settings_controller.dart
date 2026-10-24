@@ -6,7 +6,6 @@ import '../app_settings.dart';
 
 part 'settings_controller.g.dart';
 
-/// Loads [AppSettings] once and persists every change.
 @riverpod
 class SettingsController extends _$SettingsController {
   @override

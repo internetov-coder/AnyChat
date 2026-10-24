@@ -1,10 +1,5 @@
-/// Media input types a model accepts in addition to text.
 enum ModelModality { image, video, audio }
 
-/// Media capabilities we can infer from a model id.
-///
-/// Used when a provider catalog says nothing about modalities (OpenAI's
-/// `/models`, static fallback lists, custom model ids, ...).
 Set<ModelModality> inferMediaModalities(String modelId) {
   final id = modelId.toLowerCase();
   bool has(String needle) => id.contains(needle);
@@ -46,8 +41,6 @@ Set<ModelModality> inferMediaModalities(String modelId) {
   return out;
 }
 
-/// Union of catalog-declared [declared] capabilities and the id-based
-/// inference above.
 Set<ModelModality> mediaModalitiesFor(
   String modelId, {
   Set<ModelModality> declared = const <ModelModality>{},
@@ -57,7 +50,6 @@ Set<ModelModality> mediaModalitiesFor(
   return out;
 }
 
-/// Heuristic: does this model id look like a reasoning/thinking model?
 bool isReasoningModel(String modelId) {
   final id = modelId.toLowerCase();
   const markers = <String>[
@@ -76,7 +68,6 @@ bool isReasoningModel(String modelId) {
   return markers.any(id.contains);
 }
 
-/// A model as shown on the Models screen.
 class ModelInfo {
   const ModelInfo({
     required this.id,
@@ -89,33 +80,22 @@ class ModelInfo {
     this.reasoningEfforts = const <String>[],
   });
 
-  /// Wire id sent to the provider (`gpt-4o-mini`, `models/gemini-...` without
-  /// the prefix, ...). Never translated.
   final String id;
 
-  /// Human-readable name. Falls back to [id] when the provider gives none.
   final String name;
 
-  /// Input context window in tokens when the provider reports it.
   final int? contextWindow;
 
-  /// True when [contextWindow] is a default/approximate value.
   final bool approximateContext;
 
-  /// USD per 1M input tokens, when the provider reports pricing.
   final double? inputPricePerM;
 
-  /// USD per 1M output tokens, when the provider reports pricing.
   final double? outputPricePerM;
 
-  /// Media inputs (image/video/audio) this model accepts.
   final Set<ModelModality> modalities;
 
-  /// Thinking levels the catalog advertises for this model
-  /// (e.g. `none, low, medium, high`); empty = not reasoning-based.
   final List<String> reasoningEfforts;
 
-  /// Whether attachments can be sent to this model at all.
   bool get supportsAttachments => modalities.isNotEmpty;
 
   @override

@@ -10,11 +10,6 @@ import '../chat/state/current_chat.dart';
 import '../chat/domain/models.dart';
 import 'chat_drawer.dart';
 
-/// ChatGPT-style entry point: opens straight into the current chat.
-///
-/// Without a chat yet it shows the empty state — floating menu button,
-/// a big "С чего начнем?" headline and the composer, which creates the
-/// first chat on send.
 class MainShell extends ConsumerWidget {
   const MainShell({super.key});
 

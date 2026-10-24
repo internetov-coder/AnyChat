@@ -4,9 +4,6 @@ import '../../../app_providers.dart';
 
 part 'current_chat.g.dart';
 
-/// The chat currently open in [MainShell].
-///
-/// `null` means "no chat selected" and shows the new-chat home screen.
 @Riverpod(keepAlive: true)
 class CurrentChat extends _$CurrentChat {
   @override

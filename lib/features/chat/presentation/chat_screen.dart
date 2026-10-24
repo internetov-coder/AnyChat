@@ -16,8 +16,6 @@ import 'widgets/context_circle.dart';
 import 'widgets/menu_glyph.dart';
 import 'widgets/message_bubble.dart';
 
-/// Single chat in the ChatGPT layout: no app bar, floating menu/new-chat
-/// buttons on top, messages in the middle and the capsule composer below.
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key, required this.chatId});
 
@@ -128,7 +126,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ),
       data: (Chat? chat) {
         if (chat == null) {
-          // The chat was deleted: fall back to the new-chat home.
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
               ref.read(currentChatProvider.notifier).closeChat();

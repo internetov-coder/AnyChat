@@ -14,8 +14,6 @@ import '../../providers/state/providers_state.dart';
 import '../app_settings.dart';
 import '../state/settings_controller.dart';
 
-/// Global settings: provider entry point, language, theme, generation
-/// parameters, system prompt and the error debug log.
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -198,8 +196,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         provider = candidate;
       }
     }
-    // Thinking levels for the selected model: whatever the catalog said
-    // when the model was picked, otherwise the id-based heuristic.
     var efforts = settings.modelReasoningEfforts;
     if (efforts.isEmpty && isReasoningModel(settings.selectedModelId ?? '')) {
       efforts = const <String>['low', 'medium', 'high'];

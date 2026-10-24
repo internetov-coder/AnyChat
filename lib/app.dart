@@ -8,8 +8,6 @@ import 'features/settings/app_settings.dart';
 import 'features/settings/state/settings_controller.dart';
 import 'l10n/app_localizations.dart';
 
-/// Root widget: Material 3 themes (dynamic color on Android 12+), locale and
-/// localization delegates.
 class AnyChatApp extends ConsumerWidget {
   const AnyChatApp({super.key});
 
@@ -25,10 +23,6 @@ class AnyChatApp extends ConsumerWidget {
     );
     return DynamicColorBuilder(
       builder: (lightDynamic, darkDynamic) {
-        // `dynamic_color` 2.x hands out the ColorScheme of
-        // `package:material_ui`, while ThemeData expects Flutter's own
-        // ColorScheme. Re-seed Flutter's scheme from the dynamic primary
-        // color (null on devices without Material You).
         final lightSeed = lightDynamic?.primary;
         final darkSeed = darkDynamic?.primary;
         return _buildApp(settings, lightSeed, darkSeed);
@@ -41,7 +35,6 @@ class AnyChatApp extends ConsumerWidget {
     Color? lightSeed,
     Color? darkSeed,
   ) {
-    // An explicit accent always wins over dynamic color.
     final accentSeed = kAccentColors[settings.accentColor];
     final lightScheme = ColorScheme.fromSeed(
       seedColor: accentSeed ?? lightSeed ?? _seed,

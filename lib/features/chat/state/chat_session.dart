@@ -13,12 +13,8 @@ import '../domain/models.dart';
 
 part 'chat_session.g.dart';
 
-/// Pre-flight failures the UI has to localize itself.
 enum ChatIssue { noKey, noModel, noChat, noProvider }
 
-/// Live state of the chat screen: streaming buffer, busy flags and the last
-/// failure (localized by the widget layer via [ChatSessionState.lastIssue] or
-/// `localizeApiError`).
 class ChatSessionState {
   const ChatSessionState({
     this.isStreaming = false,
@@ -71,8 +67,6 @@ class _Session {
       );
 }
 
-/// Coordinates sending, streaming, branching and history handoff.
-///
 /// Keep-alive so an in-flight generation survives navigation.
 @Riverpod(keepAlive: true)
 class ChatSession extends _$ChatSession {
@@ -80,8 +74,6 @@ class ChatSession extends _$ChatSession {
 
   @override
   ChatSessionState build() => const ChatSessionState();
-
-  // ---------------------------------------------------------------- public
 
   Future<void> send(
     int chatId,
@@ -119,7 +111,6 @@ class ChatSession extends _$ChatSession {
     await _generate(session: session, turns: _historyTurns(session, fresh));
   }
 
-  /// Stops the in-flight generation, keeping whatever was produced so far.
   void stop() {
     final token = _token;
     if (token != null && !token.isCancelled) {
@@ -146,7 +137,6 @@ class ChatSession extends _$ChatSession {
     }
   }
 
-  /// Copies every message up to [messageId] into a new branch (rollback).
   Future<int?> branchFrom(int chatId, int messageId) async {
     if (state.isStreaming || state.busy) return null;
     state = const ChatSessionState();
@@ -167,7 +157,6 @@ class ChatSession extends _$ChatSession {
     }
   }
 
-  /// Edits a user message in a *new* branch and regenerates the reply.
   Future<void> editMessage(int chatId, int messageId, String newText) async {
     final trimmed = newText.trim();
     if (trimmed.isEmpty || state.isStreaming || state.busy) return;
@@ -204,8 +193,6 @@ class ChatSession extends _$ChatSession {
     await ref.read(chatRepositoryProvider).setActiveBranch(chatId, branchId);
   }
 
-  /// Asks the model to summarize the conversation, stores the answer as the
-  /// system message of a brand-new chat and returns its id.
   Future<int?> summarize(int chatId, {required String prompt}) async {
     if (state.isStreaming || state.busy) return null;
     final trimmedPrompt = prompt.trim();
@@ -282,8 +269,6 @@ class ChatSession extends _$ChatSession {
       _token = null;
     }
   }
-
-  // --------------------------------------------------------------- private
 
   Future<_Session?> _openSession(int chatId) async {
     final chatRepo = ref.read(chatRepositoryProvider);
@@ -432,8 +417,6 @@ class ChatSession extends _$ChatSession {
     }
   }
 
-  /// Adds this request's usage to the chat totals: provider-reported when
-  /// available, heuristic estimate otherwise. Never breaks the chat.
   Future<void> _recordUsage(
     _Session session,
     List<ChatTurn> sent,

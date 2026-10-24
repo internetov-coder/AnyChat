@@ -11,11 +11,6 @@ import '../../../settings/state/settings_controller.dart';
 import '../../domain/models.dart';
 import 'input_bar.dart';
 
-/// Owns the composer state (text controller, staged attachments, file
-/// picking) and delegates the actual send to the parent via [onSend].
-///
-/// Used both by the chat screen and by the "С чего начнем?" home, so the
-/// empty state can start a conversation without extra plumbing.
 class ChatComposer extends ConsumerStatefulWidget {
   const ChatComposer({
     super.key,
@@ -39,7 +34,6 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focus = FocusNode();
 
-  /// Files staged for the next message (cleared on send).
   final List<ChatAttachment> _pending = <ChatAttachment>[];
 
   @override

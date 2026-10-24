@@ -5,11 +5,6 @@ import '../../../providers/domain/model_info.dart';
 import '../../domain/models.dart';
 import 'attachment_view.dart';
 
-/// ChatGPT-style composer: one rounded capsule with the "+" attachment
-/// button on the left, the message field and a circular send button on the
-/// right. The send button is muted while the field is empty and only takes
-/// the accent color when there is something to send; while generating it
-/// turns into a red stop button.
 class InputBar extends StatefulWidget {
   const InputBar({
     super.key,
