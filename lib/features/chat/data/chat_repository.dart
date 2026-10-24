@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../../core/storage/db.dart';
+import '../domain/models.dart' as dm;
 
 /// Chat and branch persistence (including branch forking).
 class ChatRepository {
@@ -8,20 +9,24 @@ class ChatRepository {
 
   final AppDatabase _db;
 
-  Stream<List<Chat>> watchChats() {
+  Stream<List<dm.Chat>> watchChats() {
     final query = _db.select(_db.chats)
       ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]);
-    return query.watch();
+    return query.watch().map((rows) => rows.map(dm.Chat.fromRow).toList());
   }
 
-  Stream<Chat?> watchChat(int chatId) {
+  Stream<dm.Chat?> watchChat(int chatId) {
     final query = _db.select(_db.chats)..where((t) => t.id.equals(chatId));
-    return query.watchSingleOrNull();
+    return query
+        .watchSingleOrNull()
+        .then((row) => row == null ? null : dm.Chat.fromRow(row));
   }
 
-  Future<Chat?> getChat(int chatId) {
+  Future<dm.Chat?> getChat(int chatId) {
     final query = _db.select(_db.chats)..where((t) => t.id.equals(chatId));
-    return query.getSingleOrNull();
+    return query
+        .getSingleOrNull()
+        .then((row) => row == null ? null : dm.Chat.fromRow(row));
   }
 
   /// Creates the chat with its initial `main` branch and returns both ids.
@@ -72,7 +77,7 @@ class ChatRepository {
   }
 
   /// Creates a missing active branch (self-healing for legacy rows).
-  Future<int> ensureActiveBranch(int chatId, Chat chat) async {
+  Future<int> ensureActiveBranch(int chatId, dm.Chat chat) async {
     final existing = chat.activeBranchId;
     if (existing != null) return existing;
     final branchId = await _db
@@ -82,18 +87,18 @@ class ChatRepository {
     return branchId;
   }
 
-  Stream<List<Branch>> watchBranches(int chatId) {
+  Stream<List<dm.Branch>> watchBranches(int chatId) {
     final query = _db.select(_db.branches)
       ..where((t) => t.chatId.equals(chatId))
       ..orderBy([(t) => OrderingTerm.asc(t.id)]);
-    return query.watch();
+    return query.watch().map((rows) => rows.map(dm.Branch.fromRow).toList());
   }
 
-  Future<List<Branch>> getBranches(int chatId) {
+  Future<List<dm.Branch>> getBranches(int chatId) {
     final query = _db.select(_db.branches)
       ..where((t) => t.chatId.equals(chatId))
       ..orderBy([(t) => OrderingTerm.asc(t.id)]);
-    return query.get();
+    return query.get().then((rows) => rows.map(dm.Branch.fromRow).toList());
   }
 
   /// Copies the source branch up to and including [messageId] into a new

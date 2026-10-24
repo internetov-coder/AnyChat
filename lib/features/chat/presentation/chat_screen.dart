@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app_providers.dart';
 import '../../../core/errors/error_localizer.dart';
-import '../../../core/storage/db.dart';
+import '../domain/models.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/app_settings.dart';
 import '../../settings/state/settings_controller.dart';

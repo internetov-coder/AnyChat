@@ -8,9 +8,6 @@ class ProviderConfigRepository {
 
   final AppDatabase _db;
 
-  Stream<List<ProviderConfig>> watchAll() =>
-      _db.select(_db.providersConfigs).watch();
-
   Future<String?> baseUrlOverride(String providerId) async {
     final query = _db.select(_db.providersConfig)
       ..where((t) => t.providerId.equals(providerId));

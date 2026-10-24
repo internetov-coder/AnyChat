@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../app_providers.dart';
-import '../../../core/storage/db.dart';
+import '../domain/models.dart';
 
 part 'chat_providers.g.dart';
 

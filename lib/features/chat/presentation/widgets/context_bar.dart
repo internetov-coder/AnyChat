@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/storage/db.dart';
+import '../../domain/models.dart';
 import '../../../../core/storage/token_estimator.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../settings/app_settings.dart';

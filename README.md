@@ -84,9 +84,13 @@ AnyChat — Android-приложение на Flutter для общения с L
 4. **Ключи и конфиг разделены.** API-ключи — только в
    `flutter_secure_storage`; drift хранит `providers_config` (Base URL),
    чаты, ветки и сообщения.
-5. **Доменные модели = drift-строки.** Дублировать `Chat/Message/Branch` и
-   писать мапперы в v1 нет смысла — сгенерированные ряды неизменяемы и
-   подходят как domain-модели (`features/chat/domain/models.dart` — баррел).
+5. **Доменные модели отделены от drift-строк.** `riverpod_generator` не может
+   разрешить типы, сгенерированные в `db.g.dart` (это `part`-файл): генерация
+   падала с `InvalidTypeException`. Поэтому `Chat/Message/Branch` — обычные
+   неизменяемые классы в `features/chat/domain/models.dart`, а репозитории
+   маппят строки через `fromRow`. Плюс: кодогенерация drift и riverpod больше
+   не зависит от порядка выполнения (в CI всё равно сначала создаётся
+   `db.g.dart`).
 6. **`drift_flutter` вместо `sqlite3_flutter_libs`.** Так рекомендует
    документация drift: `driftDatabase(name:)` сам настраивает путь и
    нативные библиотеки.

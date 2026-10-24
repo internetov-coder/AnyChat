@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/errors/api_error.dart';
 import '../../../../core/errors/error_localizer.dart';
-import '../../../../core/storage/db.dart';
+import '../../domain/models.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// A single chat bubble: user messages use `primaryContainer`, assistant

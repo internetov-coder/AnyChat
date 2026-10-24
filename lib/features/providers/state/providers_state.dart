@@ -1,17 +1,11 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../app_providers.dart';
-import '../../../core/storage/db.dart';
 import '../data/provider_adapter.dart';
 import '../domain/model_info.dart';
 import '../domain/provider_registry.dart';
 
 part 'providers_state.g.dart';
-
-/// Live per-provider configuration rows (base URL overrides).
-@riverpod
-Stream<List<ProviderConfig>> providerConfigs(Ref ref) =>
-    ref.watch(providerConfigRepositoryProvider).watchAll();
 
 /// Whether an API key is already stored for [providerId].
 @riverpod
