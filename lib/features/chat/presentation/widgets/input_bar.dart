@@ -47,12 +47,12 @@ class InputBar extends StatelessWidget {
           suffixIcon: Padding(
             padding: const EdgeInsetsDirectional.only(end: 8),
             child: isBusy
-                ? FilledIconButton(
+                ? IconButton.filled(
                     onPressed: onStop,
                     tooltip: l10n.stop,
                     icon: const Icon(Icons.stop),
                   )
-                : FilledIconButton(
+                : IconButton.filled(
                     onPressed: onSend,
                     tooltip: l10n.send,
                     icon: const Icon(Icons.send),

@@ -24,23 +24,29 @@ class AnthropicAdapter extends ProviderAdapter {
     final turns = ProviderAdapter.mergeTurns(params.turns);
     final system = ProviderAdapter.systemPromptOf(turns);
     final messages = turns.where((t) => t.role != 'system').toList();
+    final body = <String, dynamic>{
+      'model': params.model,
+      'max_tokens': params.maxTokens ?? 4096,
+      'stream': true,
+      'messages': <Map<String, String>>[
+        for (final turn in messages)
+          <String, String>{'role': turn.role, 'content': turn.content},
+      ],
+    };
+    if (system != null) {
+      body['system'] = system;
+    }
+    final temperature = params.temperature;
+    if (temperature != null) {
+      body['temperature'] = temperature;
+    }
     return ChatRequest(
       url: joinUrl(params.baseUrl, '/messages'),
       headers: <String, String>{
         'x-api-key': params.apiKey,
         'anthropic-version': '2023-06-01',
       },
-      body: <String, dynamic>{
-        'model': params.model,
-        'max_tokens': params.maxTokens ?? 4096,
-        'stream': true,
-        if (system != null) 'system': system,
-        'messages': <Map<String, String>>[
-          for (final turn in messages)
-            <String, String>{'role': turn.role, 'content': turn.content},
-        ],
-        if (params.temperature != null) 'temperature': params.temperature,
-      },
+      body: body,
     );
   }
 

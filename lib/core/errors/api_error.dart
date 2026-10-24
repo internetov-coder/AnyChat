@@ -211,6 +211,7 @@ class ApiError implements Exception {
           cause: exception,
         );
       case DioExceptionType.connectionError:
+      case DioExceptionType.badCertificate:
         return ApiError(
           type: ApiErrorType.networkError,
           raw: exception.message ?? exception.toString(),

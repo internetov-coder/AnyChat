@@ -319,7 +319,7 @@ class ChatSession extends _$ChatSession {
   List<ChatTurn> _historyTurns(_Session session, List<Message> history) {
     final system = _systemTurnFor(session);
     return <ChatTurn>[
-      if (system != null) system,
+      ?system,
       for (final message in history)
         if ((message.role == 'user' || message.role == 'assistant') &&
             message.content.trim().isNotEmpty)

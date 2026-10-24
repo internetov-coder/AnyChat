@@ -19,7 +19,7 @@ class ChatRepository {
     final query = _db.select(_db.chats)..where((t) => t.id.equals(chatId));
     return query
         .watchSingleOrNull()
-        .then((row) => row == null ? null : dm.Chat.fromRow(row));
+        .map((row) => row == null ? null : dm.Chat.fromRow(row));
   }
 
   Future<dm.Chat?> getChat(int chatId) {

@@ -1,4 +1,4 @@
-import '../../core/storage/db.dart' as db;
+import '../../../core/storage/db.dart' as db;
 
 /// Domain models for the chat feature.
 ///

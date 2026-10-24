@@ -118,7 +118,10 @@ AnyChat — Android-приложение на Flutter для общения с L
     создаются в CI до `flutter analyze`.
 15. **cleartext HTTP разрешён** (`android:usesCleartextTraffic="true"`) —
     нужен для локального Ollama по `http://`.
-16. **JDK 21 в CI** — Gradle 9.3 / AGP 9.1 требуют 17+, 21 — стабильный LTS.
+16. **Filled icon button.** В Flutter нет класса `FilledIconButton` — поле
+    ввода использует `IconButton.filled` (тот же Material 3 filled icon button
+    со скруглением 28dp).
+17. **JDK 21 в CI** — Gradle 9.3 / AGP 9.1 требуют 17+, 21 — стабильный LTS.
 
 ## Ограничения v1
 
