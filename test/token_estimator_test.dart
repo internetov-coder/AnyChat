@@ -1,0 +1,47 @@
+import 'package:anychat/core/storage/token_estimator.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  group('estimateTokens', () {
+    test('empty string is zero', () {
+      expect(estimateTokens(''), 0);
+    });
+
+    test('latin: four chars per token (rounded up)', () {
+      expect(estimateTokens('abcd'), 1);
+      expect(estimateTokens('abc'), 1);
+      expect(estimateTokens('abcdefgh'), 2);
+      expect(estimateTokens('a'), 1);
+    });
+
+    test('cyrillic: two chars per token (rounded up)', () {
+      expect(estimateTokens('привет'), 3);
+      expect(estimateTokens('пр'), 1);
+      expect(estimateTokens('п'), 1);
+      expect(estimateTokens('сообщение'), 5);
+    });
+
+    test('mixed latin and cyrillic', () {
+      // 'hi ' -> 3 latin chars -> 1 token, 'привет' -> 6 cyrillic chars -> 3.
+      expect(estimateTokens('hi привет'), 4);
+    });
+
+    test('cjk and emoji count one token per char', () {
+      expect(estimateTokens('你好'), 2);
+      expect(estimateTokens('😀'), 1);
+    });
+  });
+
+  group('estimateConversationTokens', () {
+    test('sums messages plus per-message overhead', () {
+      expect(
+        estimateConversationTokens(<String>['abcd', 'abcd']),
+        1 + 1 + 2 * 4,
+      );
+    });
+
+    test('empty conversation without overhead', () {
+      expect(estimateConversationTokens(<String>[]), 0);
+    });
+  });
+}
