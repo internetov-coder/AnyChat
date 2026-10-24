@@ -107,13 +107,14 @@ jobs:
               continue
             fi
             sha7="${GITHUB_SHA:0:7}"
-            gh release create "r${n}" \
-              "build/app/outputs/flutter-apk/app-release.apk#AnyChat-arm64-r${n}" \
+            asset="AnyChat-arm64-r${n}"
+            cp "build/app/outputs/flutter-apk/app-release.apk" "${asset}"
+            gh release create "r${n}" "${asset}" \
               --target "${GITHUB_SHA}" \
               --title "AnyChat r${n}" \
               --notes "Automated release build \`${sha7}\` — ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
               --latest
-            echo "published release r${n}"
+            echo "published release r${n} with asset ${asset}"
             exit 0
           done
           echo "Could not allocate a free release tag" >&2
