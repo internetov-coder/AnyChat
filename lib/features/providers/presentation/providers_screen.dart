@@ -163,23 +163,20 @@ class _ProviderDetailState extends ConsumerState<_ProviderDetail> {
     final baseUrl = urlText.isEmpty ? provider.baseUrl : urlText;
     String result;
     try {
-      final adapter = adapterFor(provider.format);
-      if (provider.modelsEndpoint != null) {
-        await adapter.fetchModels(apiKey: apiKey, baseUrl: baseUrl);
-      } else {
-        final probe = ChatParams(
-          apiKey: apiKey,
-          baseUrl: baseUrl,
-          model: provider.defaultModel,
-          turns: const <ChatTurn>[
-            ChatTurn(role: 'user', content: 'ping'),
-          ],
-          maxTokens: 1,
-          timeout: const Duration(seconds: 30),
-        );
-        await for (final _ in adapter.streamChat(probe)) {
-          // Drain the stream: a completed request proves the key works.
-        }
+      // Always probe with a minimal completion: some model catalogs (e.g.
+      // the Vercel AI Gateway) are public and would not prove the key works.
+      final probe = ChatParams(
+        apiKey: apiKey,
+        baseUrl: baseUrl,
+        model: provider.defaultModel,
+        turns: const <ChatTurn>[
+          ChatTurn(role: 'user', content: 'ping'),
+        ],
+        maxTokens: 1,
+        timeout: const Duration(seconds: 30),
+      );
+      await for (final _ in adapterFor(provider.format).streamChat(probe)) {
+        // Drain the stream: a completed request proves the key works.
       }
       result = 'ok';
     } catch (_) {

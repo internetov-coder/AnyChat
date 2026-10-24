@@ -445,6 +445,36 @@ const List<ProviderInfo> kProviders = <ProviderInfo>[
     ],
   ),
   ProviderInfo(
+    id: 'vercel',
+    displayName: 'Vercel AI Gateway',
+    format: ApiFormat.openai,
+    // OpenAI-compatible surface of the Vercel AI Gateway: GET /models is
+    // public, POST /chat/completions requires a Bearer key.
+    baseUrl: 'https://ai-gateway.vercel.sh/v1',
+    defaultModel: 'openai/gpt-4o-mini',
+    modelsEndpoint: '/models',
+    fallbackModels: <ModelInfo>[
+      ModelInfo(
+        id: 'openai/gpt-4o-mini',
+        name: 'GPT-4o mini',
+        contextWindow: 128000,
+        approximateContext: true,
+      ),
+      ModelInfo(
+        id: 'openai/gpt-4.1-mini',
+        name: 'GPT-4.1 mini',
+        contextWindow: 1047576,
+        approximateContext: true,
+      ),
+      ModelInfo(
+        id: 'google/gemini-2.5-flash',
+        name: 'Gemini 2.5 Flash',
+        contextWindow: 1000000,
+        approximateContext: true,
+      ),
+    ],
+  ),
+  ProviderInfo(
     id: 'anthropic',
     displayName: 'Anthropic',
     format: ApiFormat.anthropic,

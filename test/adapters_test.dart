@@ -108,6 +108,19 @@ void main() {
       expect(request.headers['Authorization'], 'Bearer sk-test-key');
     });
 
+    test('parses Vercel AI Gateway style pricing and context window', () {
+      final models = adapter.parseModels(
+        '{"data":[{"id":"google/gemini-2.5-flash","name":"Gemini 2.5 Flash",'
+        '"context_window":1000000,'
+        '"pricing":{"input":"0.0000003","output":"0.0000025"}}]}',
+      );
+      expect(models, hasLength(1));
+      expect(models.single.contextWindow, 1000000);
+      expect(models.single.approximateContext, isFalse);
+      expect(models.single.inputPricePerM, closeTo(0.3, 1e-9));
+      expect(models.single.outputPricePerM, closeTo(2.5, 1e-9));
+    });
+
     test('parses the models payload including pricing', () {
       final models = adapter.parseModels(
         '{"data":[{"id":"gpt-4o"},'

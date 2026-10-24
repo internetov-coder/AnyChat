@@ -2,7 +2,7 @@
 
 AnyChat — Android-приложение на Flutter для общения с LLM через **ваш собственный API-ключ**.
 Аналог «своего ChatGPT» с фокусом на прозрачный контроль контекста и минималистичный Material 3 UI:
-20 провайдеров, стриминг SSE, ветвление диалога, индикатор токенов и сжатие истории (handoff).
+21 провайдер, стриминг SSE, ветвление диалога, индикатор токенов и сжатие истории (handoff).
 
 > 📸 Скриншот: TODO (добавить после первой публичной сборки)
 
@@ -26,7 +26,7 @@ AnyChat — Android-приложение на Flutter для общения с L
 
 ## Настройка провайдера
 
-1. **Настройки → Провайдер и ключ → Провайдер** — выберите одного из 20 провайдеров.
+1. **Настройки → Провайдер и ключ → Провайдер** — выберите одного из 21 провайдера.
 2. В карточке провайдера введите **API-ключ** и нажмите **Сохранить ключ**.
    В UI показывается только маска вида `sk-...abcd`; сам ключ хранится в
    `flutter_secure_storage` (Keystore Android) и никогда не попадает в БД или лог.
@@ -64,8 +64,9 @@ AnyChat — Android-приложение на Flutter для общения с L
 | 16 | Lambda              | `openai`  | `https://api.lambdalabs.com/v1`           | нет       |
 | 17 | Cohere              | `openai`  | `https://api.cohere.com/compatibility/v1` | нет       |
 | 18 | Ollama (локальный)  | `openai`  | `http://10.0.2.2:11434/v1`                | да        |
-| 19 | Anthropic           | `anthropic` | `https://api.anthropic.com/v1`          | да        |
-| 20 | Google Gemini       | `gemini`  | `https://generativelanguage.googleapis.com/v1beta` | да |
+| 19 | Vercel AI Gateway   | `openai`  | `https://ai-gateway.vercel.sh/v1`         | да        |
+| 20 | Anthropic           | `anthropic` | `https://api.anthropic.com/v1`          | да        |
+| 21 | Google Gemini       | `gemini`  | `https://generativelanguage.googleapis.com/v1beta` | да |
 
 Для любого провайдера доступно переопределение Base URL в его карточке.
 Если `/models` недоступен или запрос не удался — используется статический
@@ -112,21 +113,28 @@ AnyChat — Android-приложение на Flutter для общения с L
 11. **Ветвление через копирование.** Fork ветки копирует её сообщения
     (транзакция drift) — проще и надёжнее переиспользования `parentId`,
     чаты в v1 небольшие.
-12. **Проверка ключа:** `/models` если у провайдера есть endpoint, иначе
-    минимальный chat-проба (`max_tokens: 1`).
-13. **Навигация без роутера:** `NavigationBar`/`NavigationRail` (порог 840dp)
+12. **Проверка ключа — минимальный chat-проба** (`max_tokens: 1`), а не
+    запрос `/models`: у Vercel AI Gateway каталог моделей публичный
+    (отвечает и без ключа), поэтому список ничего не доказывал бы о
+    валидности ключа. Побочный плюс — проверка работает одинаково для всех
+    провайдеров, включая Ollama без `/models`.
+13. **Vercel AI Gateway** добавлен как OpenAI-совместимый провайдер
+    (`https://ai-gateway.vercel.sh/v1`): базовый URL и публичность
+    `GET /models` проверены запросами к живому API, а цены из каталога
+    (`pricing.input/output`) парсятся наравне с OpenRouter (`prompt/completion`).
+14. **Навигация без роутера:** `NavigationBar`/`NavigationRail` (порог 840dp)
     + обычный `Navigator` — для трёх экранов и перехода «сжал историю → новый чат»
     go_router избыточен.
-14. **`gen-l10n` c `nullable-getter: false`:** `AppLocalizations.of(context)`
+15. **`gen-l10n` c `nullable-getter: false`:** `AppLocalizations.of(context)`
     не-nullable, меньше `!` в UI-коде. Сгенерированные файлы не коммитятся —
     создаются в CI до `flutter analyze`.
-15. **cleartext HTTP разрешён** (`android:usesCleartextTraffic="true"`) —
+16. **cleartext HTTP разрешён** (`android:usesCleartextTraffic="true"`) —
     нужен для локального Ollama по `http://`.
-16. **Filled icon button.** В Flutter нет класса `FilledIconButton` — поле
+17. **Filled icon button.** В Flutter нет класса `FilledIconButton` — поле
     ввода использует `IconButton.filled` (тот же Material 3 filled icon button
     со скруглением 28dp).
-17. **JDK 21 в CI** — Gradle 9.3 / AGP 9.1 требуют 17+, 21 — стабильный LTS.
-18. **Релизы автоматические.** Каждый успешный push в `main` создаёт GitHub
+18. **JDK 21 в CI** — Gradle 9.3 / AGP 9.1 требуют 17+, 21 — стабильный LTS.
+19. **Релизы автоматические.** Каждый успешный push в `main` создаёт GitHub
     Release с тегом `rN` (N = максимум существующих `rN` + 1), заголовком
     `AnyChat rN` и ассетом `AnyChat-arm64-rN.apk` — схема имени из
     требования плюс стандартное расширение, чтобы Android считал файл APK.
@@ -172,7 +180,7 @@ lib/
   core/                         # ошибки, SSE, токены, drift, secure storage
   features/
     chat/                       # data (репозитории), domain, presentation
-    providers/                  # реестр 20 провайдеров + адаптеры форматов
+    providers/                  # реестр 21 провайдера + адаптеры форматов
     models/                     # выбор модели
     settings/                   # настройки + контроллер
   l10n/                         # ARB: app_en / app_ru / app_uk

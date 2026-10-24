@@ -63,8 +63,10 @@ class OpenAIAdapter extends ProviderAdapter {
       double? outputPrice;
       final pricing = item['pricing'];
       if (pricing is Map) {
-        inputPrice = pricePerMillion(pricing['prompt']);
-        outputPrice = pricePerMillion(pricing['completion']);
+        // OpenRouter uses prompt/completion, Vercel AI Gateway input/output.
+        inputPrice = pricePerMillion(pricing['prompt'] ?? pricing['input']);
+        outputPrice =
+            pricePerMillion(pricing['completion'] ?? pricing['output']);
       }
       result.add(ModelInfo(
         id: id,
