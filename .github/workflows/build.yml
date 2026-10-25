@@ -101,16 +101,18 @@ jobs:
       - name: flutter test
         run: flutter test
 
+      - name: flutter build apk --release
+        run: flutter build apk --release
+
       - name: Temp signing diagnostics
         shell: bash
         run: |
           set -uo pipefail
-          echo "HOME=$HOME ANDROID_USER_HOME=${ANDROID_USER_HOME:-unset}"
-          env | grep -iE "^(ANDROID|JAVA|HOME)" | sort
+          echo "HOME=$HOME"
+          echo "--- keystores on the runner:"
+          find "$HOME" "$GITHUB_WORKSPACE" \( -name "*.keystore" -o -name "*.jks" \) 2>/dev/null || true
+          echo "--- signingReport:"
           (cd android && ./gradlew --console=plain signingReport) || true
-
-      - name: flutter build apk --release
-        run: flutter build apk --release
 
       - name: Verify APK signature
         run: python3 scripts/verify_apk_signature.py build/app/outputs/flutter-apk/app-release.apk "$HOME/.android/debug.keystore"
