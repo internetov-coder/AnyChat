@@ -47,11 +47,24 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pub-
 
-      - name: Cache Android debug keystore
-        uses: actions/cache@v4
-        with:
-          path: ~/.android/debug.keystore
-          key: ${{ runner.os }}-android-debug-keystore
+      - name: Debug keystore (stable release signature)
+        # Releases are signed with the debug key; the key is materialized from
+        # the repository secret so every build keeps the same signature.
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_DEBUG_KEYSTORE_B64 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.android"
+          if [ -n "${KEYSTORE_B64:-}" ]; then
+            printf '%s' "$KEYSTORE_B64" | base64 -d > "$HOME/.android/debug.keystore"
+          elif [ ! -s "$HOME/.android/debug.keystore" ]; then
+            keytool -genkeypair -keystore "$HOME/.android/debug.keystore" \
+              -storepass android -keypass android -alias androiddebugkey \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
+          test -s "$HOME/.android/debug.keystore"
 
       - name: Cache Gradle
         uses: actions/cache@v4
@@ -90,6 +103,9 @@ jobs:
 
       - name: flutter build apk --release
         run: flutter build apk --release
+
+      - name: Verify APK signature
+        run: python3 scripts/verify_apk_signature.py build/app/outputs/flutter-apk/app-release.apk "$HOME/.android/debug.keystore"
 
       - name: Short SHA
         id: sha

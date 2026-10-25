@@ -125,12 +125,26 @@ class ChatSession extends _$ChatSession {
     if (session == null) return;
     try {
       final repo = ref.read(messageRepositoryProvider);
-      var history = await repo.messagesInBranch(session.branchId);
-      if (history.isNotEmpty && history.last.role == 'assistant') {
-        await repo.deleteMessage(history.last.id);
-        history = history.sublist(0, history.length - 1);
-      }
+      final history = await repo.messagesInBranch(session.branchId);
       if (history.isEmpty) return;
+      if (history.last.role == 'assistant') {
+        final chatRepo = ref.read(chatRepositoryProvider);
+        final branches = await chatRepo.getBranches(chatId);
+        final newBranchId = await chatRepo.forkBranchBefore(
+          chatId: chatId,
+          sourceBranchId: session.branchId,
+          messageId: history.last.id,
+          name: 'v${branches.length + 1}',
+        );
+        final freshSession = session.withBranch(newBranchId);
+        final freshHistory = await repo.messagesInBranch(newBranchId);
+        if (freshHistory.isEmpty) return;
+        await _generate(
+          session: freshSession,
+          turns: _historyTurns(freshSession, freshHistory),
+        );
+        return;
+      }
       await _generate(session: session, turns: _historyTurns(session, history));
     } catch (e) {
       _setUnknownFailure(e);
