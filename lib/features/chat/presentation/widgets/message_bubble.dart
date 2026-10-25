@@ -55,7 +55,7 @@ class MessageBubble extends StatelessWidget {
         : ApiError.fromStored(storedError, details: message.errorDetails);
 
     final showCopy = !isStreaming && message.content.trim().isNotEmpty;
-    final showBranch = onBranch != null && isLast;
+    final showBranch = onBranch != null && (isLast || branchPager != null);
     final hasActions = showCopy ||
         onEdit != null ||
         showBranch ||

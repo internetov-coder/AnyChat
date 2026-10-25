@@ -118,7 +118,7 @@ class ChatSession extends _$ChatSession {
     }
   }
 
-  Future<void> regenerate(int chatId) async {
+  Future<void> regenerate(int chatId, {int? targetMessageId}) async {
     if (state.isStreaming || state.busy) return;
     state = const ChatSessionState();
     final session = await _openSession(chatId);
@@ -127,13 +127,20 @@ class ChatSession extends _$ChatSession {
       final repo = ref.read(messageRepositoryProvider);
       final history = await repo.messagesInBranch(session.branchId);
       if (history.isEmpty) return;
-      if (history.last.role == 'assistant') {
+      var targetId = targetMessageId;
+      if (targetId != null && !history.any((Message m) => m.id == targetId)) {
+        targetId = null;
+      }
+      if (targetId == null && history.last.role == 'assistant') {
+        targetId = history.last.id;
+      }
+      if (targetId != null) {
         final chatRepo = ref.read(chatRepositoryProvider);
         final branches = await chatRepo.getBranches(chatId);
         final newBranchId = await chatRepo.forkBranchBefore(
           chatId: chatId,
           sourceBranchId: session.branchId,
-          messageId: history.last.id,
+          messageId: targetId,
           name: 'v${branches.length + 1}',
         );
         final freshSession = session.withBranch(newBranchId);

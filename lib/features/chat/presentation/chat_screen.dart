@@ -216,6 +216,45 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         : settings.systemPrompt;
 
     final usage = computeContextUsage(settings, messages, systemPrompt);
+
+    // The anchor is the message that actually differs between this branch and
+    // a sibling (falling back to the last answer): the ‹1/2› pager and its
+    // actions live there, so they never jump to newer messages.
+    Message? anchor;
+    if (branches.length > 1) {
+      search:
+      for (final sibling in branches) {
+        if (sibling.id == branchId) continue;
+        final other =
+            allMessages.where((Message m) => m.branchId == sibling.id).toList();
+        final n =
+            messages.length < other.length ? messages.length : other.length;
+        for (var i = 0; i < n; i++) {
+          if (messages[i].role != other[i].role ||
+              messages[i].content != other[i].content) {
+            anchor = messages[i];
+            break search;
+          }
+        }
+      }
+      if (anchor == null) {
+        for (var i = messages.length - 1; i >= 0; i--) {
+          if (messages[i].role == 'assistant') {
+            anchor = messages[i];
+            break;
+          }
+        }
+      } else if (anchor!.role != 'assistant') {
+        final start = messages.indexOf(anchor!);
+        for (var i = start; i < messages.length; i++) {
+          if (messages[i].role == 'assistant') {
+            anchor = messages[i];
+            break;
+          }
+        }
+      }
+    }
+    final anchorId = anchor?.id;
     final reversed = messages.reversed.toList();
 
     return Column(
@@ -241,9 +280,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     final isAssistant = message.role == 'assistant';
                     final isStreaming = session.isStreaming &&
                         session.streamingMessageId == message.id;
-                    final canRegenerate = isLast && isAssistant;
+                    final isAnchor = message.id == anchorId;
+                    final canRegenerate =
+                        isAssistant && (isLast || isAnchor);
                     BranchPager? branchPager;
-                    if (isLast &&
+                    if (isAnchor &&
                         branches.length > 1 &&
                         !session.isStreaming &&
                         !session.busy) {
@@ -274,7 +315,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       onRegenerate: canRegenerate
                           ? () => ref
                               .read(chatSessionProvider.notifier)
-                              .regenerate(widget.chatId)
+                              .regenerate(
+                                widget.chatId,
+                                targetMessageId:
+                                    isAnchor && !isLast ? message.id : null,
+                              )
                           : null,
                       branchPager: branchPager,
                     );
