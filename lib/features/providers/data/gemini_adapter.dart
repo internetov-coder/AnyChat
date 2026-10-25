@@ -36,11 +36,9 @@ class GeminiAdapter extends ProviderAdapter {
             ],
           },
         'contents': contents,
-        if (params.topK != null || params.maxTokens != null)
+        if (params.maxTokens != null)
           'generationConfig': <String, dynamic>{
-            if (params.topK != null) 'topK': params.topK,
-            if (params.maxTokens != null)
-              'maxOutputTokens': params.maxTokens,
+            'maxOutputTokens': params.maxTokens,
           },
       },
     );

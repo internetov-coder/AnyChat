@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/errors/debug_log.dart';
-import '../../../core/network/api_format.dart';
 import '../../../core/theme/accent_colors.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../models/presentation/models_screen.dart';
@@ -302,48 +301,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             context,
             l10n.advancedSettings,
             <Widget>[
-              if (provider?.format == ApiFormat.openai) ...<Widget>[
-                      Text(
-                        'frequency_penalty = '
-                        '${settings.frequencyPenalty.toStringAsFixed(2)}',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      Slider(
-                        value: settings.frequencyPenalty,
-                        min: -2,
-                        max: 2,
-                        divisions: 40,
-                        label: settings.frequencyPenalty.toStringAsFixed(2),
-                        onChanged: (double value) =>
-                            _controller.setFrequencyPenalty(value),
-                      ),
-                    ],
-                    if (provider?.format == ApiFormat.gemini) ...<Widget>[
-                      Row(
-                        children: <Widget>[
-                          Text(
-                            'top_k',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          const Spacer(),
-                          Switch(
-                            value: settings.topK != null,
-                            onChanged: (bool enabled) =>
-                                _controller.setTopK(enabled ? 40 : null),
-                          ),
-                        ],
-                      ),
-                      if (settings.topK != null)
-                        Slider(
-                          value: (settings.topK ?? 40).toDouble(),
-                          min: 1,
-                          max: 100,
-                          divisions: 99,
-                          label: '${settings.topK}',
-                          onChanged: (double value) =>
-                              _controller.setTopK(value.round()),
-                        ),
-                    ],
               if (efforts.isNotEmpty)
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16),

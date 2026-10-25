@@ -20,8 +20,6 @@ class OpenAIAdapter extends ProviderAdapter {
           for (final turn in turns) _messageFor(turn),
         ],
         'stream': true,
-        if (params.frequencyPenalty != null)
-          'frequency_penalty': params.frequencyPenalty,
         if (params.reasoningEffort != null)
           'reasoning_effort': params.reasoningEffort,
         if (params.maxTokens != null) 'max_tokens': params.maxTokens,

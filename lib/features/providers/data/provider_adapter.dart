@@ -49,8 +49,6 @@ class ChatParams {
     required this.baseUrl,
     required this.model,
     required this.turns,
-    this.frequencyPenalty,
-    this.topK,
     this.reasoningEffort,
     this.maxTokens,
     this.timeout = const Duration(seconds: 90),
@@ -60,8 +58,6 @@ class ChatParams {
   final String baseUrl;
   final String model;
   final List<ChatTurn> turns;
-  final double? frequencyPenalty;
-  final int? topK;
 
   /// `low` / `medium` / `high` for reasoning models (OpenAI-compatible);
   /// `null` = not sent.

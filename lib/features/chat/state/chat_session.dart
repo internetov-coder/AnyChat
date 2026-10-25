@@ -219,8 +219,6 @@ class ChatSession extends _$ChatSession {
         baseUrl: session.baseUrl,
         model: session.model,
         turns: turns,
-        frequencyPenalty: session.settings.frequencyPenalty,
-        topK: session.settings.topK,
         reasoningEffort: session.settings.reasoningEffort.isEmpty
             ? null
             : session.settings.reasoningEffort,
@@ -369,8 +367,6 @@ class ChatSession extends _$ChatSession {
       baseUrl: session.baseUrl,
       model: session.model,
       turns: turns,
-      frequencyPenalty: session.settings.frequencyPenalty,
-      topK: session.settings.topK,
       reasoningEffort: session.settings.reasoningEffort.isEmpty
           ? null
           : session.settings.reasoningEffort,

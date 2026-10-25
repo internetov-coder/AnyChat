@@ -165,22 +165,6 @@ void main() {
       );
     });
 
-    test('serializes frequency_penalty for openai', () {
-      final request = adapter.buildChatRequest(
-        ChatParams(
-          apiKey: 'k',
-          baseUrl: 'https://api.openai.com/v1',
-          model: 'gpt-4o-mini',
-          turns: const <ChatTurn>[
-            ChatTurn(role: 'user', content: 'hi'),
-          ],
-          frequencyPenalty: 0.5,
-        ),
-      );
-      expect(request.body['frequency_penalty'], 0.5);
-      expect(request.body.containsKey('top_k'), isFalse);
-    });
-
     test('serializes reasoning_effort when set', () {
       final request = adapter.buildChatRequest(
         ChatParams(
@@ -403,23 +387,6 @@ void main() {
         baseUrl: baseUrl,
       );
       expect(request.url, '$baseUrl/models?key=AIza-Test_Key');
-    });
-
-    test('serializes top_k in generationConfig', () {
-      final request = adapter.buildChatRequest(
-        ChatParams(
-          apiKey: 'AIza-Test_Key',
-          baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
-          model: 'gemini-2.5-flash',
-          turns: const <ChatTurn>[
-            ChatTurn(role: 'user', content: 'hi'),
-          ],
-          topK: 40,
-        ),
-      );
-      final config = request.body['generationConfig'] as Map<String, dynamic>;
-      expect(config['topK'], 40);
-      expect(config.containsKey('frequency_penalty'), isFalse);
     });
 
     test('captures usage and thoughts from gemini usageMetadata', () {

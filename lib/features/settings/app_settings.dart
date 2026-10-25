@@ -9,8 +9,6 @@ class AppSettings {
     this.maxTokens,
     this.timeoutSeconds = 90,
     this.systemPrompt = '',
-    this.frequencyPenalty = 0.0,
-    this.topK,
     this.contextLimit,
     this.historyDepth,
     this.accentColor = 'system',
@@ -32,10 +30,6 @@ class AppSettings {
   final int? maxTokens;
   final int timeoutSeconds;
   final String systemPrompt;
-
-  final double frequencyPenalty;
-
-  final int? topK;
 
   final int? contextLimit;
 
@@ -62,8 +56,6 @@ class AppSettings {
       maxTokens: prefs.getInt('max_tokens'),
       timeoutSeconds: prefs.getInt('timeout_seconds') ?? 90,
       systemPrompt: prefs.getString('system_prompt') ?? '',
-      frequencyPenalty: prefs.getDouble('frequency_penalty') ?? 0.0,
-      topK: prefs.getInt('top_k'),
       contextLimit: prefs.getInt('context_limit'),
       historyDepth: prefs.getInt('history_depth'),
       accentColor: prefs.getString('accent_color') ?? 'system',
@@ -102,8 +94,6 @@ class AppSettings {
     Object? maxTokens = _unspecified,
     int? timeoutSeconds,
     String? systemPrompt,
-    double? frequencyPenalty,
-    Object? topK = _unspecified,
     Object? contextLimit = _unspecified,
     Object? historyDepth = _unspecified,
     String? accentColor,
@@ -125,8 +115,6 @@ class AppSettings {
           identical(maxTokens, _unspecified) ? this.maxTokens : maxTokens as int?,
       timeoutSeconds: timeoutSeconds ?? this.timeoutSeconds,
       systemPrompt: systemPrompt ?? this.systemPrompt,
-      frequencyPenalty: frequencyPenalty ?? this.frequencyPenalty,
-      topK: identical(topK, _unspecified) ? this.topK : topK as int?,
       contextLimit: identical(contextLimit, _unspecified)
           ? this.contextLimit
           : contextLimit as int?,
@@ -175,8 +163,6 @@ class AppSettings {
     await _setOrNull(prefs, 'max_tokens', maxTokens);
     await prefs.setInt('timeout_seconds', timeoutSeconds);
     await prefs.setString('system_prompt', systemPrompt);
-    await prefs.setDouble('frequency_penalty', frequencyPenalty);
-    await _setOrNull(prefs, 'top_k', topK);
     await _setOrNull(prefs, 'context_limit', contextLimit);
     await _setOrNull(prefs, 'history_depth', historyDepth);
     await prefs.setString('accent_color', accentColor);
