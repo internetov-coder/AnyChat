@@ -17,12 +17,18 @@ class ChatComposer extends ConsumerStatefulWidget {
     required this.isBusy,
     required this.onStop,
     required this.onSend,
+    this.contextUsed,
+    this.contextLimit,
+    this.onContextTap,
   });
 
   final bool isBusy;
   final VoidCallback onStop;
   final Future<void> Function(String text, List<ChatAttachment> attachments)
       onSend;
+  final int? contextUsed;
+  final int? contextLimit;
+  final VoidCallback? onContextTap;
 
   @override
   ConsumerState<ChatComposer> createState() => _ChatComposerState();
@@ -194,6 +200,9 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
       supportedModalities: _supportedFor(settings),
       onAttach: _pickAttachment,
       onRemoveAttachment: _removePending,
+      contextUsed: widget.contextUsed,
+      contextLimit: widget.contextLimit,
+      onContextTap: widget.onContextTap,
     );
   }
 }

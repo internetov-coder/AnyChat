@@ -10,6 +10,14 @@ import '../../../../l10n/app_localizations.dart';
 import 'attachment_view.dart';
 import 'code_block.dart';
 
+/// Compact `‹ 2/2 ›` switcher between regenerations of the same message.
+typedef BranchPager = ({
+  int current,
+  int total,
+  VoidCallback? onPrev,
+  VoidCallback? onNext,
+});
+
 class MessageBubble extends StatelessWidget {
   const MessageBubble({
     super.key,
@@ -21,6 +29,7 @@ class MessageBubble extends StatelessWidget {
     this.onEdit,
     this.onBranch,
     this.onRegenerate,
+    this.branchPager,
   });
 
   final Message message;
@@ -31,6 +40,7 @@ class MessageBubble extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onBranch;
   final VoidCallback? onRegenerate;
+  final BranchPager? branchPager;
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +59,7 @@ class MessageBubble extends StatelessWidget {
     final hasActions = showCopy ||
         onEdit != null ||
         showBranch ||
+        branchPager != null ||
         (onRegenerate != null && error == null);
 
     final generatingStyle = theme.textTheme.bodyMedium?.copyWith(
@@ -161,6 +172,8 @@ class MessageBubble extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
+                    if (branchPager != null)
+                      _BranchPager(pager: branchPager!),
                     if (showCopy)
                       IconButton(
                         onPressed: () =>
@@ -215,6 +228,59 @@ class MessageBubble extends StatelessWidget {
       SnackBar(
         content: Text(l10n.copied),
         duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+}
+
+class _BranchPager extends StatelessWidget {
+  const _BranchPager({required this.pager});
+
+  final BranchPager pager;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      height: 30,
+      margin: const EdgeInsets.only(right: 4),
+      decoration: BoxDecoration(
+        border: Border.all(color: scheme.outlineVariant),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          _arrow(context, Icons.chevron_left, pager.onPrev),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 1),
+            child: Text(
+              '${pager.current}/${pager.total}',
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ),
+          _arrow(context, Icons.chevron_right, pager.onNext),
+        ],
+      ),
+    );
+  }
+
+  Widget _arrow(BuildContext context, IconData icon, VoidCallback? onTap) {
+    final scheme = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: onTap,
+      customBorder: const CircleBorder(),
+      child: SizedBox(
+        width: 30,
+        height: 30,
+        child: Icon(
+          icon,
+          size: 18,
+          color: onTap == null ? scheme.outline : scheme.onSurfaceVariant,
+        ),
       ),
     );
   }

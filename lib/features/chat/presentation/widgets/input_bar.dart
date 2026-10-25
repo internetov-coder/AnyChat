@@ -4,6 +4,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../providers/domain/model_info.dart';
 import '../../domain/models.dart';
 import 'attachment_view.dart';
+import 'context_circle.dart';
 
 class InputBar extends StatefulWidget {
   const InputBar({
@@ -17,6 +18,9 @@ class InputBar extends StatefulWidget {
     this.supportedModalities = const <ModelModality>{},
     this.onAttach,
     this.onRemoveAttachment,
+    this.contextUsed,
+    this.contextLimit,
+    this.onContextTap,
   });
 
   final TextEditingController controller;
@@ -28,6 +32,9 @@ class InputBar extends StatefulWidget {
   final Set<ModelModality> supportedModalities;
   final VoidCallback? onAttach;
   final ValueChanged<int>? onRemoveAttachment;
+  final int? contextUsed;
+  final int? contextLimit;
+  final VoidCallback? onContextTap;
 
   @override
   State<InputBar> createState() => _InputBarState();
@@ -66,8 +73,12 @@ class _InputBarState extends State<InputBar> {
         widget.onAttach != null;
     final sendReady = _hasText && !widget.isBusy;
 
+    final showContext = widget.contextUsed != null &&
+        widget.contextLimit != null &&
+        widget.onContextTap != null;
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
@@ -99,7 +110,12 @@ class _InputBarState extends State<InputBar> {
                   hintText: l10n.messageInputHint,
                   filled: true,
                   fillColor: scheme.surfaceContainerHigh,
-                  contentPadding: const EdgeInsets.fromLTRB(4, 14, 52, 14),
+                  contentPadding: EdgeInsets.fromLTRB(
+                    4,
+                    12,
+                    showContext ? 84 : 52,
+                    12,
+                  ),
                   prefixIcon: IconButton(
                     icon: const Icon(Icons.add),
                     tooltip:
@@ -112,6 +128,16 @@ class _InputBarState extends State<InputBar> {
                   ),
                 ),
               ),
+              if (showContext)
+                Positioned(
+                  right: 50,
+                  bottom: 9,
+                  child: ContextCircle(
+                    used: widget.contextUsed!,
+                    limit: widget.contextLimit!,
+                    onTap: widget.onContextTap,
+                  ),
+                ),
               Positioned(
                 right: 6,
                 bottom: 4,

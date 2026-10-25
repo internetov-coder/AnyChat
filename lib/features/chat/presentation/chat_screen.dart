@@ -242,6 +242,25 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     final isStreaming = session.isStreaming &&
                         session.streamingMessageId == message.id;
                     final canRegenerate = isLast && isAssistant;
+                    BranchPager? branchPager;
+                    if (isLast &&
+                        branches.length > 1 &&
+                        !session.isStreaming &&
+                        !session.busy) {
+                      var index = branches
+                          .indexWhere((Branch b) => b.id == chat.activeBranchId);
+                      if (index < 0) index = 0;
+                      branchPager = (
+                        current: index + 1,
+                        total: branches.length,
+                        onPrev: index > 0
+                            ? () => _switchTo(branches[index - 1].id)
+                            : null,
+                        onNext: index < branches.length - 1
+                            ? () => _switchTo(branches[index + 1].id)
+                            : null,
+                      );
+                    }
                     return MessageBubble(
                       message: message,
                       streamingText: session.streamText,
@@ -257,29 +276,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               .read(chatSessionProvider.notifier)
                               .regenerate(widget.chatId)
                           : null,
+                      branchPager: branchPager,
                     );
                   },
                 ),
-        ),
-        _buildBranchStrip(chat, branches),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 2, 12, 0),
-          child: Row(
-            children: <Widget>[
-              const Spacer(),
-              ContextCircle(
-                used: usage.used,
-                limit: usage.limit,
-                onTap: () => _showContextStats(
-                  l10n,
-                  chat,
-                  usage.used,
-                  usage.limit,
-                  usage.approximate,
-                ),
-              ),
-            ],
-          ),
         ),
         ChatComposer(
           isBusy: session.isStreaming || session.busy,
@@ -290,6 +290,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     text,
                     attachments: attachments,
                   ),
+          contextUsed: usage.used,
+          contextLimit: usage.limit,
+          onContextTap: () => _showContextStats(
+            l10n,
+            chat,
+            usage.used,
+            usage.limit,
+            usage.approximate,
+          ),
         ),
       ],
     );
@@ -352,32 +361,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Widget _buildBranchStrip(Chat chat, List<Branch> branches) {
-    if (branches.length <= 1) return const SizedBox.shrink();
-    final activeId = chat.activeBranchId;
-    return SizedBox(
-      height: 48,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        children: <Widget>[
-          for (final branch in branches)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
-                label: Text(branch.name),
-                selected: branch.id == activeId,
-                onSelected: (bool selected) {
-                  if (!selected || branch.id == activeId) return;
-                  ref
-                      .read(chatSessionProvider.notifier)
-                      .switchBranch(widget.chatId, branch.id);
-                },
-              ),
-            ),
-        ],
-      ),
-    );
+  void _switchTo(int branchId) {
+    ref
+        .read(chatSessionProvider.notifier)
+        .switchBranch(widget.chatId, branchId);
   }
 
   static String _issueMessage(AppLocalizations l10n, ChatIssue issue) {
