@@ -101,6 +101,14 @@ jobs:
       - name: flutter test
         run: flutter test
 
+      - name: Temp signing diagnostics
+        shell: bash
+        run: |
+          set -uo pipefail
+          echo "HOME=$HOME ANDROID_USER_HOME=${ANDROID_USER_HOME:-unset}"
+          env | grep -iE "^(ANDROID|JAVA|HOME)" | sort
+          (cd android && ./gradlew --console=plain signingReport) || true
+
       - name: flutter build apk --release
         run: flutter build apk --release
 
