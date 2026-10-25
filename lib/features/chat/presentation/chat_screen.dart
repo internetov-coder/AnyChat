@@ -244,8 +244,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             break;
           }
         }
-      } else if (anchor!.role != 'assistant') {
-        final start = messages.indexOf(anchor!);
+      } else if (anchor.role != 'assistant') {
+        final start = messages.indexOf(anchor);
         for (var i = start; i < messages.length; i++) {
           if (messages[i].role == 'assistant') {
             anchor = messages[i];
