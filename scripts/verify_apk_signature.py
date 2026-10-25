@@ -104,7 +104,7 @@ def keystore_cert(path: str) -> bytes:
                 "keytool", "-exportcert",
                 "-keystore", path,
                 "-storepass", "android",
-                "-alias", "androiddebugkey",
+                "-alias", "AndroidDebugKey",
                 "-file", tmp.name,
             ],
             check=True,

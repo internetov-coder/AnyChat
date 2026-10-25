@@ -48,23 +48,25 @@ jobs:
             ${{ runner.os }}-pub-
 
       - name: Debug keystore (stable release signature)
-        # Releases are signed with the debug key; the key is materialized from
-        # the repository secret so every build keeps the same signature.
+        # AGP 9 signs with the debug key stored at ~/.config/.android
+        # (alias AndroidDebugKey); the bytes come from the repository secret
+        # so every build keeps the same signature.
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_DEBUG_KEYSTORE_B64 }}
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "$HOME/.android"
+          target="$HOME/.config/.android/debug.keystore"
+          mkdir -p "$(dirname "$target")"
           if [ -n "${KEYSTORE_B64:-}" ]; then
-            printf '%s' "$KEYSTORE_B64" | base64 -d > "$HOME/.android/debug.keystore"
-          elif [ ! -s "$HOME/.android/debug.keystore" ]; then
-            keytool -genkeypair -keystore "$HOME/.android/debug.keystore" \
-              -storepass android -keypass android -alias androiddebugkey \
+            printf '%s' "$KEYSTORE_B64" | base64 -d > "$target"
+          elif [ ! -s "$target" ]; then
+            keytool -genkeypair -keystore "$target" \
+              -storepass android -keypass android -alias AndroidDebugKey \
               -keyalg RSA -keysize 2048 -validity 10000 \
               -dname "CN=Android Debug,O=Android,C=US"
           fi
-          test -s "$HOME/.android/debug.keystore"
+          test -s "$target"
 
       - name: Cache Gradle
         uses: actions/cache@v4
@@ -104,18 +106,8 @@ jobs:
       - name: flutter build apk --release
         run: flutter build apk --release
 
-      - name: Temp signing diagnostics
-        shell: bash
-        run: |
-          set -uo pipefail
-          echo "HOME=$HOME"
-          echo "--- keystores on the runner:"
-          find "$HOME" "$GITHUB_WORKSPACE" \( -name "*.keystore" -o -name "*.jks" \) 2>/dev/null || true
-          echo "--- signingReport:"
-          (cd android && ./gradlew --console=plain signingReport) || true
-
       - name: Verify APK signature
-        run: python3 scripts/verify_apk_signature.py build/app/outputs/flutter-apk/app-release.apk "$HOME/.android/debug.keystore"
+        run: python3 scripts/verify_apk_signature.py build/app/outputs/flutter-apk/app-release.apk "$HOME/.config/.android/debug.keystore"
 
       - name: Short SHA
         id: sha
